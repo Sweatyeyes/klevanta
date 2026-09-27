@@ -69,7 +69,7 @@ ul{margin:0;padding-left:18px;display:grid;gap:4px}
 <p class="meta" id="modeTxt"></p>
 <div><p class="meta lbl">Купол</p><div class="cans" id="cans"></div></div>
 <div id="freeOpts" hidden><p class="meta lbl">Высота раскрытия</p><div class="cans wx alts" id="alts"></div><p class="meta lbl" style="margin-top:10px">Ветер у земли</p><div class="cans wx" id="winds"></div></div>
-<details class="meta help"><summary>Управление</summary><ul class="meta"><li>Держи левую или правую половину экрана: клеванта идёт вниз. Отпусти: возвращается.</li><li>Клавиатура: ← → или A D, обе сразу: ↓ или пробел.</li><li>Оглядеться: тяни пальцем в верхней части экрана (мышью — правой кнопкой) или Q E R F.</li><li>Радар справа сверху: цель, круг и ветер. Садись против ветра, на 2–3 м тяни обе до конца.</li></ul></details>
+<details class="meta help"><summary>Управление</summary><ul class="meta"><li>Держи палец у левого или правого края экрана: клеванта идёт вниз. Отпусти: возвращается.</li><li>Клавиатура: ← → или A D, обе сразу: ↓ или пробел.</li><li>Оглядеться: тяни пальцем в середине экрана (мышью — правой кнопкой) или Q E R F.</li><li>Радар справа сверху: цель, круг и ветер. Садись против ветра, на 2–3 м тяни обе до конца.</li></ul></details>
 <button class="go" id="goB">ПРЫЖОК</button>
 <p class="meta" id="stat"></p>
 </div></div>
@@ -136,8 +136,10 @@ const ptr=new Map(),keys=new Set();
 // Отпустил — через секунду взгляд плавно возвращается вперёд.
 const LK={yaw:0,pit:0,id:null,x:0,y:0,idle:0};
 cv.addEventListener('pointerdown',e=>{if(mode!=='fly')return;e.preventDefault();
- if(e.clientY<H*.4||e.button===2){LK.id=e.pointerId;LK.x=e.clientX;LK.y=e.clientY;return}
- ptr.set(e.pointerId,e.clientX<W/2?'L':'R')});
+ // клеванты — левый и правый край экрана (по 28% ширины), всё между ними — обзор
+ const sd=e.clientX<W*.28?'L':e.clientX>W*.72?'R':null;
+ if(!sd||e.button===2){if(LK.id===null){LK.id=e.pointerId;LK.x=e.clientX;LK.y=e.clientY}return}
+ ptr.set(e.pointerId,sd)});
 cv.addEventListener('pointermove',e=>{if(e.pointerId!==LK.id)return;LK.yaw-=(e.clientX-LK.x)*.009;LK.pit=cl(LK.pit+(e.clientY-LK.y)*.006,-.75,1.1);LK.x=e.clientX;LK.y=e.clientY;LK.idle=0});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 const pu=e=>{ptr.delete(e.pointerId);if(e.pointerId===LK.id)LK.id=null};
@@ -1372,7 +1374,8 @@ function speedLines(dt){const tgt=mode==='fly'?cl((P.va/C.V-1.04)/.2,0,1):0;SPK+
  X.lineCap='butt'}
 // Общий тон сцены под погоду (только объекты на канве, земля и небо тонируются в шейдере) и лёгкая виньетка
 let VG=null;
-function post(){if(WX.tint){X.globalCompositeOperation='source-atop';X.fillStyle=WX.tint;X.fillRect(0,0,W,H);X.globalCompositeOperation='source-over'}
+function post(){if(mode==='fly'&&time<5){const a=.1*min(1,(5-time)/1.5);X.fillStyle=`rgba(255,122,26,${a})`;X.fillRect(0,0,W*.28,H);X.fillRect(W*.72,0,W*.28,H);
+  X.save();X.globalAlpha=min(1,(5-time)/1.5);X.fillStyle='rgba(243,239,226,.8)';X.font='600 12px "Chakra Petch",monospace';X.textAlign='center';X.fillText('↔ обзор ↕',W/2,H*.62);X.restore()}if(WX.tint){X.globalCompositeOperation='source-atop';X.fillStyle=WX.tint;X.fillRect(0,0,W,H);X.globalCompositeOperation='source-over'}
  if(!VG||VG.w!==W||VG.h!==H){const g=X.createRadialGradient(W/2,H*.45,min(W,H)*.35,W/2,H*.45,hypot(W,H)*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(10,14,20,.32)');VG={g,w:W,h:H}}
  X.fillStyle=VG.g;X.fillRect(0,0,W,H)}
 let last=performance.now();
