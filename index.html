@@ -17,14 +17,18 @@ canvas{position:fixed;inset:0;touch-action:none}#g{pointer-events:none}
 #alt small{font-size:18px;color:var(--ink);opacity:.75}
 #spd,#dist{font-size:14px;text-shadow:0 1px 4px rgba(0,0,0,.7)}
 #phase{max-width:min(56vw,320px);font-size:13px;background:var(--panel);border:1px solid var(--edge);padding:4px 8px;border-radius:4px;margin-top:6px}
-#tr{top:calc(52px + env(safe-area-inset-top,0px));right:16px;display:grid;justify-items:center;gap:4px}
-#rad{width:120px;height:120px}
+#tr{top:calc(12px + env(safe-area-inset-top,0px));right:52px;display:grid;justify-items:center;gap:4px}
+#rad{width:108px;height:108px}
 #wtx{font-size:13px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:2px 8px}
-.tg{bottom:calc(16px + env(safe-area-inset-bottom,0px));width:26px;height:120px;border:1px solid var(--edge);background:var(--panel);border-radius:4px;overflow:hidden}
-.tg i{position:absolute;left:0;right:0;top:0;height:0;background:var(--sig)}
-.tg b{position:absolute;left:0;right:0;top:50%;border-top:1px dashed var(--ink);opacity:.5}
+.tg{top:34%;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:30px;border:1px solid var(--edge);background:var(--panel);border-radius:6px}
+.tg i{position:absolute;left:0;right:0;top:0;height:0;background:var(--sig);border-radius:5px 5px 0 0;opacity:.85}
+.tg em{position:absolute;left:0;right:0;border-top:1px solid rgba(243,239,226,.35);z-index:1}
+.tg span{position:absolute;font-size:10px;line-height:1;transform:translateY(-50%);color:var(--dim);white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#tgL span{left:36px}#tgR span{right:36px}
+@media (orientation:landscape){.tg{top:40%}.tgl{top:calc(40% - 18px)}#tl{top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:118px}}
+.tg u{position:absolute;left:-6px;right:-6px;height:6px;margin-top:-3px;border-radius:3px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.6);display:none;z-index:2}
 #tgL{left:16px}#tgR{right:16px}
-.tgl{bottom:calc(142px + env(safe-area-inset-bottom,0px));font-size:11px;letter-spacing:.08em;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.tgl{top:calc(34% - 18px);font-size:11px;letter-spacing:.08em;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 #tglL{left:16px}#tglR{right:16px}
 #tape{right:56px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:14px;height:200px;border:1px solid var(--edge);background:var(--panel);border-radius:3px}
 #tape em{position:absolute;left:0;right:0;background:rgba(155,227,107,.35);bottom:13.3%;height:6.7%}
@@ -44,7 +48,7 @@ p{margin:0;color:var(--dim)}
 .seg button[aria-pressed=true]{background:var(--sig);color:#1a1208}
 .lbl{margin-bottom:6px}.cans.alts{grid-template-columns:repeat(3,1fr)}
 .help summary{cursor:pointer;color:var(--ink)}.help ul{margin-top:6px}
-.pbtn{position:fixed;right:10px;top:calc(8px + env(safe-area-inset-top,0px));width:46px;height:38px;border-radius:8px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);font:700 14px "Chakra Petch",monospace;cursor:pointer;z-index:2}
+.pbtn{position:fixed;right:8px;top:calc(10px + env(safe-area-inset-top,0px));width:38px;height:34px;border-radius:8px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);font:700 14px "Chakra Petch",monospace;cursor:pointer;z-index:2}
 .cans small{color:var(--dim);font-size:12px}
 .go{font:700 18px "Chakra Petch",ui-monospace,monospace;letter-spacing:.08em;color:#1a1208;background:var(--sig);border:0;border-radius:6px;padding:14px;cursor:pointer}
 .go.alt{background:transparent;color:var(--ink);border:1px solid var(--edge)}
@@ -60,7 +64,7 @@ ul{margin:0;padding-left:18px;display:grid;gap:4px}
 <div class="hud" id="hudtop"></div><div class="hud" id="tl"><div id="alt">300<small> м</small></div><div id="spd"></div><div id="dist"></div><div id="phase"></div></div>
 <div class="hud" id="tr"><div id="rad"></div><span id="wtx"></span></div>
 <div class="hud tgl" id="tglL">ЛЕВАЯ</div><div class="hud tgl" id="tglR">ПРАВАЯ</div>
-<div class="hud tg" id="tgL"><b></b><i></i></div><div class="hud tg" id="tgR"><b></b><i></i></div>
+<div class="hud tg" id="tgL"><em style="top:25%"></em><em style="top:50%"></em><em style="top:75%"></em><span style="top:0">полёт</span><span style="top:50%">½ тормоз</span><span style="top:75%">глубоко</span><span style="top:100%">подрыв</span><u></u><i></i></div><div class="hud tg" id="tgR"><em style="top:25%"></em><em style="top:50%"></em><em style="top:75%"></em><span style="top:0">полёт</span><span style="top:50%">½ тормоз</span><span style="top:75%">глубоко</span><span style="top:100%">подрыв</span><u></u><i></i></div>
 <div class="hud" id="tape" hidden><em></em><u>подрыв 2–3 м</u><i></i></div>
 
 <div class="pn" id="brief"><div class="card">
@@ -139,15 +143,17 @@ cv.addEventListener('pointerdown',e=>{if(mode!=='fly')return;e.preventDefault();
  // клеванты — левый и правый край экрана (по 28% ширины), всё между ними — обзор
  const sd=e.clientX<W*.28?'L':e.clientX>W*.72?'R':null;
  if(!sd||e.button===2){if(LK.id===null){LK.id=e.pointerId;LK.x=e.clientX;LK.y=e.clientY}return}
- ptr.set(e.pointerId,sd)});
-cv.addEventListener('pointermove',e=>{if(e.pointerId!==LK.id)return;LK.yaw-=(e.clientX-LK.x)*.009;LK.pit=cl(LK.pit+(e.clientY-LK.y)*.006,-.75,1.1);LK.x=e.clientX;LK.y=e.clientY;LK.idle=0});
+ ptr.set(e.pointerId,{s:sd,y:e.clientY})});
+cv.addEventListener('pointermove',e=>{const pv=ptr.get(e.pointerId);if(pv){pv.y=e.clientY;return}if(e.pointerId!==LK.id)return;LK.yaw-=(e.clientX-LK.x)*.009;LK.pit=cl(LK.pit+(e.clientY-LK.y)*.006,-.75,1.1);LK.x=e.clientX;LK.y=e.clientY;LK.idle=0});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 const pu=e=>{ptr.delete(e.pointerId);if(e.pointerId===LK.id)LK.id=null};
 ['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,pu));
 addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){pause(mode==='fly');return}if(mode==='pause')return;keys.add(e.code);if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault();if(e.code==='Enter'&&mode!=='fly')jump()});
 addEventListener('keyup',e=>keys.delete(e.code));
 addEventListener('blur',()=>{keys.clear();ptr.clear()});
-function held(s){for(const v of ptr.values())if(v===s)return true;
+// глубина клеванты от пальца: где держишь на ползунке — настолько и затянута (верх — полёт, низ — подрыв до упора)
+function depth(s){let d=null;for(const v of ptr.values())if(v.s===s){const r=$('tg'+s).getBoundingClientRect();d=max(d??0,cl((v.y-r.top)/r.height,0,1))}return d}
+function held(s){for(const v of ptr.values())if(v.s===s)return true;
  return keys.has('ArrowDown')||keys.has('KeyS')||keys.has('Space')||(s==='L'?keys.has('ArrowLeft')||keys.has('KeyA'):keys.has('ArrowRight')||keys.has('KeyD'))}
 
 // Турбулентность за препятствиями: за лесополосой, домом, рядом деревьев с подветренной стороны — ротор.
@@ -166,7 +172,7 @@ function turbAt(x,y,z){if(!OBS)mkObs();const w=wind(0),ws=w.s;if(ws<2.5)return 0
 // Физика
 function step(dt){
  time+=dt;
- P.L=cl(P.L+(held('L')?dt/C.tD:-dt/C.tU),0,1);P.R=cl(P.R+(held('R')?dt/C.tD:-dt/C.tU),0,1);
+ {const mv=(cur,s)=>{const d=depth(s),tg=d??(held(s)?1:0);return tg>cur?min(tg,cur+dt*(d!=null?2.4:1/C.tD)):max(tg,cur-dt*(d!=null&&d>0?2.4:1/C.tU))};P.L=mv(P.L,'L');P.R=mv(P.R,'R')}
  const b=min(P.L,P.R),t=P.R-P.L,ti=Math.sign(t)*abs(t)**C.p;P.t=t;
  {const yt=ti*C.T*(.5+.5*P.va/C.V);P.yr+=(yt-P.yr)*min(1,dt/(abs(yt)<abs(P.yr)?C.tauD:C.tau))}
  const at=cl(abs(P.yr)/C.T,0,1);
@@ -265,7 +271,7 @@ function setCam(){
  cm.f=[cy*cp,sy*cp,-sp];cm.r=[-sy,cy,0];cm.u=[cy*sp,sy*sp,cp];
  const lo=cl((P.alt-1)/40,0,1),fz=P.alt+2.4-(1-lo)*.8,dist=8.5+13.5*lo; // у земли камера подходит к пилоту: смотришь на пятачок касания
  cm.x=P.x-cm.f[0]*dist;cm.y=P.y-cm.f[1]*dist;cm.z=max(1.3,fz-cm.f[2]*dist);
- cm.F=(H/2)/Math.tan(.6+(cm.fv||0));cm.cx=W/2;cm.cy=H*.42;
+ cm.F=(max(H,W*.85)/2)/Math.tan(.6+(cm.fv||0));cm.cx=W/2;cm.cy=H*(W>H?.56:.42);
 }
 function tc(x,y,z){const a=x-cm.x,b=y-cm.y,c=z-cm.z;return[a*cm.r[0]+b*cm.r[1],a*cm.u[0]+b*cm.u[1]+c*cm.u[2],a*cm.f[0]+b*cm.f[1]+c*cm.f[2]]}
 const sc=p=>[cm.cx+p[0]/p[2]*cm.F,cm.cy-p[1]/p[2]*cm.F];
@@ -1289,7 +1295,7 @@ function drawAlti(){const T0=$('hudtop').getBoundingClientRect().top,R0=62,cx=16
  X.font='700 20px "Chakra Petch",monospace';X.fillStyle=P.alt<15?'#ff5a4e':'#fff';X.fillText(P.alt<20?P.alt.toFixed(1):Math.round(P.alt),cx,cy+27);
  X.font='500 10px "Chakra Petch",monospace';X.fillStyle='rgba(243,239,226,.7)';X.fillText('×100 м',cx,cy-24);X.restore()}
 // Ветер: крупная стрелка относительно направления полёта (вверх — вперёд), сила цветом, словами — встречный/попутный/боковой
-function drawWind(){const T0=$('hudtop').getBoundingClientRect().top,cx=W/2,cy=T0+50,R0=36,w=wind(P.alt),rel=Math.atan2(w.y,w.x)-P.h;
+function drawWind(){const T0=$('hudtop').getBoundingClientRect().top,cx=min(W/2,(140+RB.left)/2),cy=T0+50,R0=36,w=wind(P.alt),rel=Math.atan2(w.y,w.x)-P.h;
  const col=w.s<3?'#9be36b':w.s<6?'#f5c842':'#ff5a4e',an=rel-Math.PI/2;
  X.save();X.beginPath();X.arc(cx,cy,R0,0,7);X.fillStyle='rgba(12,16,14,.82)';X.fill();X.strokeStyle='rgba(243,239,226,.35)';X.lineWidth=2;X.stroke();
  X.fillStyle='rgba(243,239,226,.55)';X.beginPath();X.moveTo(cx,cy-R0+3);X.lineTo(cx-5,cy-R0+11);X.lineTo(cx+5,cy-R0+11);X.fill();
@@ -1341,7 +1347,7 @@ function drawWarn(){if(!(P.warnT>0)||mode!=='fly')return;const y=$('tl').getBoun
  X.fillStyle='#28200a';X.font='800 15px "Chakra Petch",monospace';X.textAlign='center';X.fillText('!',x+24,cy+9);
  X.fillStyle='#f5c842';X.font='600 13px "Chakra Petch",monospace';X.textAlign='left';lines.forEach((l,i)=>X.fillText(l,x+48,y+20+i*17));X.restore()}
 function drawRadar(){
- const cx=RB.left+60,cy=RB.top+60,rr=58,d=hypot(P.x-TG[0],P.y-TG[1]),range=cl(d*1.3,60,900),k=rr/range,cy_=cos(cm.yaw),sy=sin(cm.yaw);
+ const cx=RB.left+RB.width/2,cy=RB.top+RB.height/2,rr=RB.width/2-2,d=hypot(P.x-TG[0],P.y-TG[1]),range=cl(d*1.3,60,900),k=rr/range,cy_=cos(cm.yaw),sy=sin(cm.yaw);
  const rp=(dx,dy)=>[dx*-sy+dy*cy_,-(dx*cy_+dy*sy)];
  X.save();X.beginPath();X.arc(cx,cy,rr,0,7);X.fillStyle='rgba(14,20,16,.72)';X.fill();X.strokeStyle='rgba(243,239,226,.25)';X.lineWidth=1;X.stroke();X.clip();
  X.beginPath();X.arc(cx,cy,rr/2,0,7);X.stroke();
@@ -1370,6 +1376,7 @@ function hud(){
  $('phase').textContent=(PH.find(p=>P.alt>p[0])||PH[4])[1];
  $('wtx').textContent=`ветер ${w.s.toFixed(1)} м/с · у земли ${w0.toFixed(1)}`;
  $('tgL').lastChild.style.height=P.L*100+'%';$('tgR').lastChild.style.height=P.R*100+'%';
+ for(const s of['L','R']){const d=depth(s),u=$('tg'+s).querySelector('u');u.style.display=d==null?'none':'block';if(d!=null)u.style.top=d*100+'%'}
  const tp=$('tape');tp.hidden=!(P.alt<15&&mode==='fly');if(!tp.hidden)tp.lastChild.style.bottom=P.alt/15*100+'%';
 }
 
