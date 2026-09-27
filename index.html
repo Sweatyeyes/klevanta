@@ -127,7 +127,7 @@ function jump(){
  TG=[C.tg[0]-TGT[0],C.tg[1]-TGT[1]];
  P={x:TG[0]+cos(up)*dd-sin(up)*lat,y:TG[1]+sin(up)*dd+cos(up)*lat,alt:A0,low:{},h:R()*6.283,va:C.V,vs:C.S,L:0,R:0,yr:0,
   stT:0,st:false,rec:0,fl:null,lowT:0,flips:0,ls:0,t:0,gs:0};
- cm.yaw=cm.by=P.h;cm.pit=cm.bp=.8;LK.yaw=LK.pit=0;AIRP=null;mode='fly';mkBots();$('brief').hidden=true;$('res').hidden=true;$('pause').hidden=true;$('pauseB').hidden=false;$('phase').hidden=free;P.gates=free?null:mkGates();
+ cm.yaw=cm.by=P.h;cm.pit=cm.bp=.8;LK.yaw=LK.pit=0;AIRP=null;mode='fly';mkBots();$('brief').hidden=true;$('res').hidden=true;$('pause').hidden=true;$('pauseB').hidden=false;$('phase').hidden=free;P.gates=free?null:placeGates();
 }
 
 // Ввод
@@ -226,7 +226,7 @@ function land(gx,gy,w,t){
  else if(P.fl!==null&&P.fl>6)tips.push(`Подрыв рано, на ${P.fl.toFixed(1)} м. Купол погасил скорость в воздухе и провалился.`);
  else if(P.fl!==null&&P.fl<1.2)tips.push('Подрыв поздно: купол не успел выйти в горизонт.');
  else if(P.fl!==null)tips.push(`Подрыв вовремя, на ${P.fl.toFixed(1)} м.`);
- if(P.gates){const ok=P.gates.filter(g=>g.st>0).length;tips.push(`Точки коробочки: ${ok} из 3 ближе 40 м (`+P.gates.map(g=>g.h+' м — '+(g.off!=null?Math.round(g.off)+' м'+(g.st>0?' ✓':''):'не дошёл')).join(', ')+').')}
+ if(P.gates){const ok=P.gates.filter(g=>g.st>0).length;tips.push(`Обручи коробочки: ${ok} из 3 (`+P.gates.map(g=>g.h+' м '+(g.st>0?'✓':g.off?'мимо '+Math.round(g.off-HOOP_R)+' м':'пропущен')).join(', ')+').')}
  if(P.lowT>.5)tips.push('Резкий поворот ниже 40 м. В повороте купол ныряет и теряет высоту.');
  if((P.tuMax||0)>.25)tips.push(`Заход через болтанку за препятствием: при ветре ${ws.toFixed(1)} м/с за лесополосой или домом тянется ротор на 10–15 его высот по ветру. Заходи так, чтобы последние 50 м не проходили с подветренной стороны деревьев и построек.`);
  if(P.flips>6)tips.push(`Много перекладок (${P.flips}). Решай раньше, корректируй меньше.`);
@@ -776,7 +776,7 @@ function canopyM(B){const g=canopyGeo(),{ribs,fw,rt,up,ch,tk,Ln}=g,z=P.alt,n=rib
  const sh1=Pp.shR,sh2=Pp.shL,hl=Pp.hdL,hr=Pp.hdR;
  if((P.cc||0)>.97){ // купол погас и лёг на траву позади пилота — ветер сдувает его назад
   const bk=[P.la.bk[0],P.la.bk[1],0],sp=Math.sqrt(C.a*.0929*2.3)/2,cc0=V3a(base,V3k(bk,Ln*.8)),o=[-bk[1]*sp,bk[0]*sp,0],q=V3k(bk,ch*.9);MAT=1;
-  quadM(B,V3a(V3s(cc0,o),[0,0,.12]),V3a(V3a(cc0,o),[0,0,.15]),V3a(V3a(V3a(cc0,o),q),[0,0,.3]),V3a(V3a(V3s(cc0,o),q),[0,0,.25]),c1,[0,0,1]);MAT=0;return}
+  MAT=0;lyingM(B,V3a(cc0,V3k(q,.5)),bk,sp,ch*.9,c1,c2);return}
  // свободные концы (передние и задние), слайдер
  MAT=0;const noL=(P.cc||0)>.45;const R4=[[sh2,-1,.07],[sh2,-1,-.07],[sh1,1,.07],[sh1,1,-.07]].map(([s0,sd,f])=>[0,1,2].map(i=>s0[i]+up[i]*.6+rt[i]*.08*sd+fw[i]*f));
  for(let i=0;i<4;i++)tubeM(B,i<2?sh2:sh1,R4[i],.025,hex3('#30343a'),3);
@@ -809,12 +809,18 @@ function canopyM(B){const g=canopyGeo(),{ribs,fw,rt,up,ch,tk,Ln}=g,z=P.alt,n=rib
    b1=[0,1,2].map(i=>top[i]-fw[i]*1.6+up[i]*.25+rt[i]*sw*.4),pc=[0,1,2].map(i=>top[i]-fw[i]*3.1+up[i]*.15+rt[i]*sw);
   lineM(B,top,b1,.02,hex3('#e8e8e8'));lineM(B,b1,pc,.02,hex3('#e8e8e8'));MAT=1;tubeM(B,pc,[0,1,2].map(i=>pc[i]-fw[i]*.55+rt[i]*sin(tt*9)*.08),.15,c2,5)}
  MAT=0}
+// погасший купол на траве: те же секции и цвета, что в полёте (края и центр — второй цвет, нос — полосой), ткань лежит складками
+function lyingM(B,c0,dir,sp,ch,c1,c2){const n=9,rt=[-dir[1],dir[0]],k=MAT;MAT=1;
+ const col=(i,s)=>{const top=i===(n>>1)||i===0||i===n-1?c2:c1,nose=i===(n>>1)?c1:c2;return s?nose:top};
+ for(let i=0;i<n;i++){const a=-1+2*i/n,b=-1+2*(i+1)/n,z0=.1+.1*abs(sin(i*1.7)),z1=.1+.1*abs(sin((i+1)*1.7));
+  for(const[f0,f1,s]of[[-.5,.2,0],[.2,.5,1]]){const P=(u,f,z)=>[c0[0]+rt[0]*u*sp+dir[0]*f*ch,c0[1]+rt[1]*u*sp+dir[1]*f*ch,z];
+   quadM(B,P(a,f0,z0),P(b,f0,z1),P(b,f1,z1+.05),P(a,f1,z0+.05),col(i,s),[0,0,1])}}MAT=k}
 // все купола: свой, парашютисты в воздухе; приземлившиеся — купол лёг по ветру, пилот стоит
 function canopiesM(){const B=MB(),sP=P,sC=C;
  for(const b of mode!=='brief'?BOTS:[]){if(hypot(b.x-cm.x,b.y-cm.y)>3500||(!b.on&&b.t>=6))continue;
   if(b.on){P=b;C=b.C;canopyM(B);P=sP;C=sC;continue}
   const g0=wind(0),ws=max(g0.s,.5),wd=[g0.x/ws,g0.y/ws],nd=[-wd[1],wd[0]],sp=Math.sqrt(b.C.a*.0929*2.3)/2,o=[b.x+wd[0]*5,b.y+wd[1]*5],c=hex3(b.C.c);
-  MAT=1;quadM(B,[o[0]+nd[0]*sp,o[1]+nd[1]*sp,.12],[o[0]+nd[0]*sp+wd[0]*3,o[1]+nd[1]*sp+wd[1]*3,.12],[o[0]-nd[0]*sp+wd[0]*3,o[1]-nd[1]*sp+wd[1]*3,.3],[o[0]-nd[0]*sp,o[1]-nd[1]*sp,.3],c,[0,0,1]);
+  lyingM(B,[o[0]+wd[0]*1.5,o[1]+wd[1]*1.5],wd,sp,3,c,hex3(b.C.c2));
   MAT=3;tubeM(B,[b.x,b.y,0],[b.x,b.y,1.45],.2,hex3(b.C.su||'#d94f2a'));sphereM(B,[b.x,b.y,1.7],.15,hex3('#f5c542'));MAT=0}
  canopyM(B);gatesM(B);return B}
 
@@ -1293,24 +1299,37 @@ function drawWind(){const T0=$('hudtop').getBoundingClientRect().top,cx=W/2,cy=T
  X.save();X.textAlign='center';X.font='700 17px "Chakra Petch",monospace';X.fillStyle=col;X.shadowColor='rgba(0,0,0,.7)';X.shadowBlur=4;
  X.fillText(w.s.toFixed(1)+' м/с',cx,cy+R0+18);X.font='500 12px "Chakra Petch",monospace';X.fillStyle='#f3efe2';
  X.fillText(word,cx,cy+R0+33);X.font='500 11px "Chakra Petch",monospace';X.fillStyle='rgba(243,239,226,.75)';X.fillText('у земли '+w0.toFixed(1),cx,cy+R0+47);X.restore()}
-// ---------- Точки коробочки (тренировка): 300 м — начало участка по ветру, 200 м — разворот на базу, 100 м — выход на прямую ----------
-// Места считаются под твой купол и ветер у земли; сторона захода — со стороны поля. Когда проходишь высоту точки, меряем, насколько далеко от неё: ближе 40 м — засчитана
+// ---------- Обручи коробочки (тренировка): 300 м — начало участка по ветру, 200 м — разворот на базу, 100 м — выход на прямую ----------
+// Места считаются под твой купол и ветер у земли: прямая против ветра до мишени, база поперёк ветра, участок по ветру.
+// Сторона захода — со стороны поля (подальше от построек). Проходишь обруч, когда пересекаешь его плоскость: внутри радиуса — засчитан
 const HOOP_R=18;
+// Обручи и мишень не должны оказаться над постройками, самолётами, ВПП: если ветер тянет коробочку на ангар — переносим мишень дальше в поле
+// (сначала против ветра, при необходимости ещё и в сторону поля; берём ближайший вариант, где всё чисто)
+function gateBad(p){if(inPoly(p,ZG.danger))return true;if(inPoly(p,ZG.nofly)&&!(C.zone==='hp'&&inPoly(p,ZG.hp)))return true;for(const b of BLD)if(hypot(p[0]-b.cx,p[1]-b.cy)<30)return true;return false}
+function placeGates(){const wd=[cos(wa),sin(wa)],fd=[-TN_[0],-TN_[1]],T0=TG.slice();let best=null;
+ for(const zone of[true,false]){for(let f=0;f<=300&&!best;f+=30)for(let u=0;u<=700;u+=20){const t=[T0[0]-wd[0]*u+fd[0]*f,T0[1]-wd[1]*u+fd[1]*f];if(zone&&!inPoly(t,ZG[C.zone]))continue;TG=t;const G=mkGates();
+  if(!gateBad(t)&&G.every(g=>!gateBad(g.p))){best={t,G,d:hypot(t[0]-T0[0],t[1]-T0[1])};break}}if(best)break}
+ if(!best){TG=T0;return mkGates()}TG=best.t;if(best.d>5){P.toast=[`Ветер на постройки — мишень перенесена в поле на ${Math.round(best.d)} м`,1];P.toastT=4}return best.G}
 function mkGates(){const ws=w0,wd=[cos(wa),sin(wa)],L=TG,Df=max(1,C.V-ws*1.1)*100/C.S,Db=C.V*100/C.S,Dd=(C.V+ws*1.3)*100/C.S,Fs=[L[0]+wd[0]*Df,L[1]+wd[1]*Df];
  const nOf=p=>(p[0]+TGT[0]-TA[0])*TN_[0]+(p[1]+TGT[1]-TA[1])*TN_[1];let sd=[-wd[1],wd[0]];if(nOf([Fs[0]+sd[0]*Db,Fs[1]+sd[1]*Db])>nOf([Fs[0]-sd[0]*Db,Fs[1]-sd[1]*Db]))sd=[-sd[0],-sd[1]];
  const Bs=[Fs[0]+sd[0]*Db,Fs[1]+sd[1]*Db],Ds=[Bs[0]-wd[0]*Dd,Bs[1]-wd[1]*Dd];
  return[{h:300,p:Ds,d:wd,st:0},{h:200,p:Bs,d:[-sd[0],-sd[1]],st:0},{h:100,p:Fs,d:[-wd[0],-wd[1]],st:0}]}
-function gateStep(){const G=P.gates;if(!G)return;const g=G.find(g=>!g.st);if(!g||P.alt>g.h)return;const d=hypot(P.x-g.p[0],P.y-g.p[1]);g.off=d;g.st=d<=40?1:-1;
- P.toast=[`Точка ${g.h} м — ${Math.round(d)} м от точки`,g.st>0?1:0];P.toastT=2.5;if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred(g.st>0?'light':'rigid')}
-// точка в небе: яркий шар и тонкая линия до земли, чтобы понимать, где она над полем
+function gateStep(){const G=P.gates;if(!G)return;const i=G.findIndex(g=>!g.st);if(i<0)return;const g=G[i],rel=[P.x-g.p[0],P.y-g.p[1]],s=rel[0]*g.d[0]+rel[1]*g.d[1];
+ if(g.ps!=null&&g.ps<0&&s>=0){const lat=-rel[0]*g.d[1]+rel[1]*g.d[0],off=hypot(lat,P.alt-g.h);g.st=off<=HOOP_R?1:-1;g.off=off;P.toast=g.st>0?[`Обруч ${g.h} м — пройден`,1]:[`Обруч ${g.h} м — мимо на ${Math.round(off-HOOP_R)} м`,0];P.toastT=2.5;
+  if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred(g.st>0?'light':'rigid')}
+ else if(P.alt<g.h-45){g.st=-1;g.off=null;P.toast=[`Обруч ${g.h} м пропущен`,0];P.toastT=2.5}
+ g.ps=s}
+function torusM(B,c,d,R0,r,col,seg=36){const ax=[d[0],d[1],0],u=[0,0,1],v=[-d[1],d[0],0],k=MAT;MAT=2;
+ const P=(a,b)=>{const ca=cos(a),sa=sin(a),cb=cos(b),sb=sin(b),rr=R0+r*cb;return[c[0]+(v[0]*ca)*rr+ax[0]*r*sb,c[1]+(v[1]*ca)*rr+ax[1]*r*sb,c[2]+u[2]*sa*rr]};
+ for(let i=0;i<seg;i++)for(let j=0;j<5;j++){const a0=i/seg*6.283,a1=(i+1)/seg*6.283,b0=j/5*6.283,b1=(j+1)/5*6.283;quadM(B,P(a0,b0),P(a1,b0),P(a1,b1),P(a0,b1),col,[0,0,1])}MAT=k}
 function gatesM(B){const G=P.gates;if(!G||mode==='brief')return;const nx=G.findIndex(g=>!g.st),T=performance.now()/1000;
- G.forEach((g,i)=>{const col=g.st>0?[.35,.9,.4]:g.st<0?[.9,.35,.3]:i===nx?[1,.62+.25*sin(T*5),.1]:[.95,.9,.75],k=MAT;MAT=2;sphereM(B,[g.p[0],g.p[1],g.h],i===nx?3:2.2,col);lineM(B,[g.p[0],g.p[1],g.h-3],[g.p[0],g.p[1],0],.15,sh3(col,.8));MAT=k})}
+ G.forEach((g,i)=>{const col=g.st>0?[.35,.9,.4]:g.st<0?[.85,.3,.25]:i===nx?[1,.62+.25*sin(T*5),.1]:[.95,.9,.75];torusM(B,[g.p[0],g.p[1],g.h],g.d,HOOP_R,i===nx?.9:.6,col)})}
 function drawToast(){if(!(P.toastT>0)||!P.toast||mode!=='fly')return;const b=$('tl').getBoundingClientRect().bottom+(P.warnT>0?64:10),tw=min(W-32,300),x=(W-tw)/2,al=min(1,P.toastT/.5),ok=P.toast[1];
  X.save();X.globalAlpha=al;X.fillStyle=ok?'rgba(14,40,18,.9)':'rgba(46,16,14,.9)';X.strokeStyle=ok?'#9be36b':'#ff5a4e';X.lineWidth=2;X.beginPath();X.roundRect?X.roundRect(x,b,tw,32,8):X.rect(x,b,tw,32);X.fill();X.stroke();
  X.fillStyle=ok?'#9be36b':'#ff5a4e';X.font='700 13px "Chakra Petch",monospace';X.textAlign='center';X.fillText((ok?'◯ ':'✕ ')+P.toast[0],W/2,b+21);X.restore()}
-function drawGateMark(){const G=P.gates;if(!G||mode!=='fly')return;const g=G.find(g=>!g.st);if(!g)return;const p=tc(g.p[0],g.p[1],g.h+6);if(p[2]<NR)return;const s=sc(p);
+function drawGateMark(){const G=P.gates;if(!G||mode!=='fly')return;const g=G.find(g=>!g.st);if(!g)return;const p=tc(g.p[0],g.p[1],g.h+HOOP_R+4);if(p[2]<NR)return;const s=sc(p);
  if(s[0]<20||s[0]>W-20||s[1]<140||s[1]>H-160)return;X.save();X.font='700 12px "Chakra Petch",monospace';X.textAlign='center';X.fillStyle='#ffb020';X.strokeStyle='rgba(0,0,0,.6)';X.lineWidth=3;
- const t=`точка ${g.h} м · ${Math.round(hypot(g.p[0]-P.x,g.p[1]-P.y))} м`;X.strokeText(t,s[0],s[1]);X.fillText(t,s[0],s[1]);X.restore()}
+ const t=`${g.h} м · ${Math.round(hypot(g.p[0]-P.x,g.p[1]-P.y))} м`;X.strokeText(t,s[0],s[1]);X.fillText(t,s[0],s[1]);X.restore()}
 function drawWarn(){if(!(P.warnT>0)||mode!=='fly')return;const y=$('tl').getBoundingClientRect().bottom+10,al=min(1,P.warnT/.5),tw=min(W-32,380),x=(W-tw)/2;
  X.save();X.globalAlpha=al;X.font='600 13px "Chakra Petch",monospace';
  const words=P.warn.split(' '),lines=[''];for(const w of words){const t=(lines[lines.length-1]+' '+w).trim();if(X.measureText(t).width>tw-60&&lines[lines.length-1])lines.push(w);else lines[lines.length-1]=t}
@@ -1395,7 +1414,7 @@ function loop(now){
  setCam();drawWorld();if(!SCN){if(mode!=='brief')drawBots();drawCanopy()}else drawTrack();drawAir(dt);post();speedLines(dt);drawMarkers();drawRadar();drawAlti();drawWind();drawWarn();drawToast();drawGateMark();hud();
  requestAnimationFrame(loop)}
 
-const MODES={train:'Купол раскрыт на 600 м. Коробочка по точкам 300, 200 и 100 м, подсказки по этапам захода, правила площадки, оценка посадки и разбор ошибок.',
+const MODES={train:'Купол раскрыт на 600 м. Коробочка по обручам на 300, 200 и 100 м, подсказки по этапам захода, правила площадки, оценка посадки и разбор ошибок.',
  free:'Сам выбираешь высоту раскрытия и ветер. Без подсказок и оценки зоны — просто летай и садись. Правила безопасности всё равно действуют.'};
 const ALTS=[600,1000,1500],WINDS={rand:['Случайный',1.5,6],calm:['Слабый',.3,1.5],mid:['Средний',3,5],strong:['Сильный',6,9]};
 function menu(){SV.mode=SV.mode||'train';
