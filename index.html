@@ -172,23 +172,28 @@ function turbAt(x,y,z){if(!OBS)mkObs();const w=wind(0),ws=w.s;if(ws<2.5)return 0
 // Физика
 function step(dt){
  time+=dt;
- {const mv=(cur,s)=>{const d=depth(s),tg=d??(held(s)?1:0);return tg>cur?min(tg,cur+dt*(d!=null?2.4:1/C.tD)):max(tg,cur-dt*(d!=null&&d>0?2.4:1/C.tU))};P.L=mv(P.L,'L');P.R=mv(P.R,'R')}
+ {const mv=(cur,s)=>{const d=depth(s),tg=d??(held(s)?1:0);const touch=d!=null||P.tch;if(d!=null)P.tch=1;else if(held(s))P.tch=0;return tg>cur?min(tg,cur+dt*(touch?2.4:1/C.tD)):max(tg,cur-dt*(touch?2.6:1/C.tU))};P.L=mv(P.L,'L');P.R=mv(P.R,'R')}
  const b=min(P.L,P.R),t=P.R-P.L,ti=Math.sign(t)*abs(t)**C.p;P.t=t;
  {const yt=ti*C.T*(.5+.5*P.va/C.V);P.yr+=(yt-P.yr)*min(1,dt/(abs(yt)<abs(P.yr)?C.tauD:C.tau))}
  const at=cl(abs(P.yr)/C.T,0,1);
  // Отпустил клеванты после торможения: купол «подныривает» — клюёт носом, разгоняется выше крейсерской и сильнее снижается,
  // затем маятником выходит в горизонт и лишняя скорость уходит в подъёмную силу. Чем глубже и быстрее отпустил, тем сильнее
- {const db=(P.pb??b)-b;if(db>0)P.dv=(P.dv||0)+db*(.5+.5*C.wl);P.pb=b;P.dv=(P.dv||0)*Math.exp(-dt/2)}
+ {const db=(P.pb??b)-b;if(db>0&&!P.st)P.dv=(P.dv||0)+db*(.5+.5*C.wl);P.pb=b;P.dv=(P.dv||0)*Math.exp(-dt/2)}
  // болтанка: воздух то проваливает, то подбрасывает, купол рыскает и качается; в среднем — просадка (ротор тянет вниз)
  {const I=turbAt(P.x,P.y,P.alt);P.tu=(P.tu||0)+(I-(P.tu||0))*min(1,dt*3);if(P.alt<40)P.tuMax=max(P.tuMax||0,P.tu);
   const T=time,n1=(sin(T*2.1+1)+.6*sin(T*4.7+2)+.4*sin(T*8.3))/2,n2=(sin(T*1.7+4)+.6*sin(T*3.9)+.4*sin(T*7.1+1))/2,n3=(sin(T*1.3+2)+.5*sin(T*3.3+5))/1.5;
   P.tz=P.tu*(.9+1.7*n1);P.ty=P.tu*.5*n2;P.tv=P.tu*C.V*.18*n3;P.tr=P.tu*.28*n2}
- const vt=C.V*(1-.7*b)+at*C.V*(.15+.2*C.wl)+P.dv*C.V*.35+P.tv;
+ P.sdv=(P.sdv||0)*Math.exp(-dt/2.5); // клевок после резкого выхода из срыва: купол ныряет, скорость и снижение резко растут
+ const vt=C.V*(1-.7*b)+at*C.V*(.15+.2*C.wl)+P.dv*C.V*.35+P.sdv*C.V*.3+P.tv;
  P.va+=(vt-P.va)*min(1,dt/(P.va>vt?.9:1.8/(1+4*P.dv)));
  const lift=max(0,P.va-vt);
- let sT=C.S*(1-.5*b)+at*C.S*C.D*2.4-lift+P.dv*C.S*.8+P.tz;
+ let sT=C.S*(1-.5*b)+at*C.S*C.D*2.4-lift+P.dv*C.S*.8+P.sdv*C.S*1.1+P.tz;
  if(!P.st){if(b>.95&&P.va<.5*C.V)P.stT+=dt;else P.stT=max(0,P.stT-dt*2);if(P.stT>1.6){P.st=true;P.rec=0}}
- else{sT=11;P.va+=(.15*C.V-P.va)*min(1,dt);if(b<.3){P.rec+=dt;if(P.rec>1.2){P.st=false;P.stT=0;P.va=.6*C.V}}else P.rec=0}
+ else{sT=11;P.va+=(.15*C.V-P.va)*min(1,dt);
+  // выход из срыва: считаем, за сколько отпустил клеванты (от 85% до 30%). Резко — купол сильно клюёт вперёд и вниз, плавно (1,5 с и дольше) — выходит мягко
+  if(b<.85&&P.relT==null)P.relT=time;if(b>=.9)P.relT=null;
+  if(b<.3){P.rec+=dt;if(P.rec>.35){const dur=time-(P.relT??time-1.5),sev=cl((1.5-dur)/1.3,0,1);P.st=false;P.stT=0;P.va=.55*C.V;P.dv=(P.dv||0)+.4+1.5*sev;P.sdv=5*sev;P.relT=null;
+   if(sev>.4){P.stDive=max(P.stDive||0,sev);P.toast=['Резко отпустил из срыва — купол клюнул вниз',0];P.toastT=3}}}else P.rec=0}
  P.vs+=(max(-1.5,sT)-P.vs)*min(1,dt/.35);
  if(!P.st)P.h+=(P.yr+P.ty)*dt;else P.yr*=.9;
  const w=wind(P.alt),gx=cos(P.h)*P.va+w.x,gy=sin(P.h)*P.va+w.y;
@@ -233,6 +238,7 @@ function land(gx,gy,w,t){
  else if(P.fl!==null&&P.fl<1.2)tips.push('Подрыв поздно: купол не успел выйти в горизонт.');
  else if(P.fl!==null)tips.push(`Подрыв вовремя, на ${P.fl.toFixed(1)} м.`);
  if(P.gates){const ok=P.gates.filter(g=>g.st>0).length;tips.push(`Точки коробочки: ${ok} из 3 (`+P.gates.map(g=>g.h+' — '+(g.st>0?'✓ '+Math.round(g.off)+' м':g.off!=null?'мимо, ближе всего '+Math.round(g.off)+' м':'не дошёл')).join(', ')+'). Засчитывается, если пролетел ближе 45 м.')}
+ if(P.stDive)tips.push('Выход из срыва: клеванты отпущены резко — купол клюнул вперёд и потерял много высоты. Отпускай плавно, за 1,5–2 секунды, давая куполу набрать скорость.');
  if(P.lowT>.5)tips.push('Резкий поворот ниже 40 м. В повороте купол ныряет и теряет высоту.');
  if((P.tuMax||0)>.25)tips.push(`Заход через болтанку за препятствием: при ветре ${ws.toFixed(1)} м/с за лесополосой или домом тянется ротор на 10–15 его высот по ветру. Заходи так, чтобы последние 50 м не проходили с подветренной стороны деревьев и построек.`);
  if(P.flips>6)tips.push(`Много перекладок (${P.flips}). Решай раньше, корректируй меньше.`);
@@ -367,7 +373,7 @@ const TA=[152,591],TU=[.625,-.781],TN_=[.784,.627],UA=-51.3,TN=(t,n)=>[TA[0]+TU[
 ZONES.nofly=[TN(145,-13),TN(-300,-13),TN(-300,150),TN(150,150)];ZG.nofly=ZONES.nofly.map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
 const TOWN=[ // t,n,длина(вдоль),ширина,высота,стены,крыша,конёк — сверено с ортофото DJI_0672 и 2ГИС
  [51,25,50,18,6,'#e9edf1','#6c7178',1.4],                                   // большой ангар (t 26–76, n 16–34)
- [11,12,8,6,3.5,'#f2f1ec','#e6e4dc',0],                                      // белый павильон у детской площадки
+ [11,12,8,6,.15,'#dcdad4','#e4e2dc',0],                                      // белая бетонная плита (не здание)
  [-78,16,13,11,7,'#2c2f35','#26292e',0],[-96,17,16,11,7,'#efe8da','#3a78c8',2.6], // чёрный дом, дом с синей крышей
  [-128.5,35,17,48,10,'#f4f4f0','#8a9098',0],                                 // гостиница «Аэродром Танай»: основной корпус
  [-131.5,65,15,10,5,'#e6e8ea','#7c8fa8',0],                                  // гостиница: корпус 2 (за основным)
@@ -1201,8 +1207,10 @@ function box(x,y,w,d,h,c){
 // Купол: 9 секций с профилем (нос, горб, задняя кромка), нижняя оболочка, стабилизаторы, стропы через каскады, слайдер, свободные концы
 function canopyGeo(){
  const A=C.a*.0929,span=Math.sqrt(A*2.3),ch=A/span*(P.st?.55:1),Ln=span*(P.st?.65:.82),tk=ch*.16;
- const h=P.h,fw=[cos(h),sin(h),0],rt0=[-sin(h),cos(h),0],ro=(P.yr||0)/C.T*.5*cl(P.va/C.V,.3,1.3)+(P.tr||0),cr=cos(ro),sr=sin(ro);
- const up=[rt0[0]*sr,rt0[1]*sr,cr],rt=[rt0[0]*cr,rt0[1]*cr,-sr];
+ let h=P.h,fw=[cos(h),sin(h),0],rt0=[-sin(h),cos(h),0],ro=(P.yr||0)/C.T*.5*cl(P.va/C.V,.3,1.3)+(P.tr||0),cr=cos(ro),sr=sin(ro);
+ let up=[rt0[0]*sr,rt0[1]*sr,cr],rt=[rt0[0]*cr,rt0[1]*cr,-sr];
+ // «клевок»: при подныривании купол уходит вперёд и вниз относительно пилота (после резкого выхода из срыва — сильно)
+ {const th=cl(((P.dv||0)+(P.sdv||0)*1.4)*.22,0,.85),c=cos(th),sn=sin(th),u2=up.map((v,i)=>v*c+fw[i]*sn),f2=fw.map((v,i)=>v*c-up[i]*sn);up=u2;fw=f2}
  const cc=P.cc||0,Lf=1-.72*cc,bk=P.la?P.la.bk:[-fw[0],-fw[1]],H0=[P.x+bk[0]*Ln*cc*.8,P.y+bk[1]*Ln*cc*.8,P.alt+1.5-cc*1.3],n=9,ribs=[],V3=(o,f,u)=>[0,1,2].map(i=>o[i]+fw[i]*f+up[i]*u),br=(P.L+P.R)/2,tt=time+(P===BOTS[0]?1.3:P===BOTS[1]?2.9:P===BOTS[2]?4.1:0);
  for(let k=0;k<=n;k++){const u=-1+2*k/n,a=u*.62,wob=P.st?sin(tt*20+k*2)*.4:0;
   const c=[0,1,2].map(i=>H0[i]+up[i]*(Ln*Lf*cos(a)+wob)+rt[i]*Ln*(1-.3*cc)*sin(a));
