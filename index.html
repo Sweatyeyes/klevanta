@@ -101,7 +101,7 @@ const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.expand();tg.ready()}
 const cl=(v,a,b)=>v<a?a:v>b?b:v,R=Math.random,{sin,cos,hypot,atan2,abs,max,min}=Math;
 const KG=85,LB=KG*2.2046;
 const CAN=[
- {a:230,n:'Начальный',zone:'student',tg:[-30,537],R:20,c:'#f3f1ea',c2:'#c9c4b5'},
+ {a:230,n:'Начальный',zone:'student',tg:[-30,537],R:20,c:'#2f6fd6',c2:'#f2c83a'},
  {a:190,n:'Переходной',zone:'main',tg:[136,513],R:15,c:'#f28c28',c2:'#b3541a'},
  {a:150,n:'Спортивный',zone:'main',tg:[136,513],R:10,c:'#2a2e38',c2:'#e6e1d3'},
  {a:110,n:'Высокий',zone:'hp',tg:[179,547],R:5,c:'#ff4fa3',c2:'#38d6e8'}];
@@ -126,7 +126,9 @@ let mode='brief',P,C,w0,wa,time=0;
 function wind(alt){const h=min(max(alt,0),600)/600,k=w0*(1+.8*Math.sqrt(h))*(1+.15*sin(time*.7)+.08*sin(time*1.9)),a=wa+.44*h+.14*sin(time*.21)+.06*sin(time*.53);return{x:cos(a)*k,y:sin(a)*k,s:k}}
 
 function jump(){
- C=CAN[SV.ci];const free=SV.mode==='free',A0=600,WR=free?WINDS[SV.wind||'rand']:WINDS.rand;w0=Math.round((WR[1]+R()*(WR[2]-WR[1]))*10)/10;wa=R()*6.283;time=0;
+ // расцветка купола каждый прыжок случайная
+ {const PAL=[['#e0452f','#f2c83a'],['#2f6fd6','#f2c83a'],['#1f9e6e','#f3f1ea'],['#7a3fc4','#38d6e8'],['#ff4fa3','#2a2e38'],['#f28c28','#2a2e38'],['#2a2e38','#e0452f'],['#38a0d8','#ff7a1a'],['#c2362f','#f3f1ea'],['#e0c21a','#2f6fd6']],q=PAL[(R()*PAL.length)|0];C={...CAN[SV.ci],c:q[0],c2:q[1]}}
+ const free=SV.mode==='free',A0=600,WR=free?WINDS[SV.wind||'rand']:WINDS.rand;w0=Math.round((WR[1]+R()*(WR[2]-WR[1]))*10)/10;wa=R()*6.283;time=0;
  const T=A0/C.S,up=wa+.3+Math.PI,dd=min(.45*w0*min(T,600/C.S)+200+(A0-600)*.4,1600),lat=(R()-.5)*400;
  TG=[C.tg[0]-TGT[0],C.tg[1]-TGT[1]];if(SV.mode==='free'){const z=ZG[C.zone];TG=z.reduce((s,p)=>[s[0]+p[0]/z.length,s[1]+p[1]/z.length],[0,0])}
  P={x:TG[0]+cos(up)*dd-sin(up)*lat,y:TG[1]+sin(up)*dd+cos(up)*lat,alt:A0,low:{},h:R()*6.283,va:C.V,vs:C.S,L:0,R:0,yr:0,
@@ -144,7 +146,7 @@ cv.addEventListener('pointerdown',e=>{if(mode!=='fly')return;e.preventDefault();
  const sd=e.clientX<W*.28?'L':e.clientX>W*.72?'R':null;
  if(!sd||e.button===2){if(LK.id===null){LK.id=e.pointerId;LK.x=e.clientX;LK.y=e.clientY}return}
  ptr.set(e.pointerId,{s:sd,y:e.clientY})});
-cv.addEventListener('pointermove',e=>{const pv=ptr.get(e.pointerId);if(pv){pv.y=e.clientY;return}if(e.pointerId!==LK.id)return;LK.yaw-=(e.clientX-LK.x)*.009;LK.pit=cl(LK.pit+(e.clientY-LK.y)*.006,-.75,1.1);LK.x=e.clientX;LK.y=e.clientY;LK.idle=0});
+cv.addEventListener('pointermove',e=>{const pv=ptr.get(e.pointerId);if(pv){pv.y=e.clientY;return}if(e.pointerId!==LK.id)return;LK.yaw+=(e.clientX-LK.x)*.009;LK.pit=cl(LK.pit+(e.clientY-LK.y)*.006,-.75,1.1);LK.x=e.clientX;LK.y=e.clientY;LK.idle=0});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 const pu=e=>{ptr.delete(e.pointerId);if(e.pointerId===LK.id)LK.id=null};
 ['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,pu));
@@ -193,13 +195,16 @@ function step(dt){
   // выход из срыва: считаем, за сколько отпустил клеванты (от 85% до 30%). Резко — купол сильно клюёт вперёд и вниз, плавно (1,5 с и дольше) — выходит мягко
   if(b<.85&&P.relT==null)P.relT=time;if(b>=.9)P.relT=null;
   if(b<.3){P.rec+=dt;if(P.rec>.35){const dur=time-(P.relT??time-1.5),sev=cl((1.5-dur)/1.3,0,1);P.st=false;P.stT=0;P.va=.55*C.V;P.dv=(P.dv||0)+.4+1.5*sev;P.sdv=5*sev;P.relT=null;
-   if(sev>.4){P.stDive=max(P.stDive||0,sev);P.toast=['Резко отпустил из срыва — купол клюнул вниз',0];P.toastT=3}}}else P.rec=0}
+   if(sev>.4){P.stDive=max(P.stDive||0,sev);P.ev='Резко отпустил клеванты из срыва — купол клюнул вперёд и вниз. Отпускай плавно!';P.evT=3.5;if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('error')}}}else P.rec=0}
  P.vs+=(max(-1.5,sT)-P.vs)*min(1,dt/.35);
  if(!P.st)P.h+=(P.yr+P.ty)*dt;else P.yr*=.9;
  const w=wind(P.alt),gx=cos(P.h)*P.va+w.x,gy=sin(P.h)*P.va+w.y;
  P.x+=gx*dt;P.y+=gy*dt;P.alt-=P.vs*dt;P.gs=hypot(gx,gy);P.gx=gx;P.gy=gy;P.lat=-gx*sin(P.h)+gy*cos(P.h);
  if(b>=.8&&P.fl===null)P.fl=P.alt;if(b<.3)P.fl=null;
  if(P.alt<40&&P.alt>2)P.lowT=max(P.lowT,at);
+ // спираль: одна клеванта зажата, купол крутится и быстро теряет высоту
+ {const sp=abs(P.yr)/C.T>.65&&P.vs>C.S*1.8&&abs(P.L-P.R)>.4;P.spT=sp?(P.spT||0)+dt:max(0,(P.spT||0)-dt*2);if(P.spT>1.8){if(!(P.evT>0&&P.ev[0]==='С'))P.spirals=(P.spirals||0)+1;P.ev='Скручиваться запрещено! Отпусти клеванту и выведи купол в горизонт';P.evT=2}}
+ if(P.evT>0)P.evT-=dt;
  {let wn='';if(P.alt<300&&P.alt>2){const q=[P.x,P.y];if(inPoly(q,ZG.danger)){P.low.rwy=1;wn='Ниже 300 м над ВПП и стоянкой самолётов — запрещено'}
   else if(inPoly(q,ZG.nofly)&&!(C.zone==='hp'&&inPoly(q,ZG.hp))){P.low.nofly=1;wn='Ниже 300 м над постройками и зоной высокоскоростных — запрещено'}}
   if(wn){if(P.warn!==wn&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('warning');P.warn=wn;P.warnT=2}else P.warnT=max(0,(P.warnT||0)-dt)}
@@ -224,7 +229,7 @@ function land(gx,gy,w,t){
  else if(fwd>6.5)fail=ws>=2&&cosU<-.5?`Посадка по ветру: ${fwd.toFixed(1)} м/с по земле, кувырок.`:`Слишком быстро по земле (${fwd.toFixed(1)} м/с): кувырок.`;
  else if(abs(lat)>2)fail=`Боковой снос ${lt}: ноги не успели, завал на бок.`;
  else if(t>.4)fail='Касание в повороте: купол зацепил крылом.';
- const pos=[P.x,P.y],inZone=inPoly(pos,ZG[C.zone]),inDanger=inPoly(pos,ZG.danger);
+ const pos=[P.x,P.y],inZone=inPoly(pos,ZG[C.zone])||(C.zone==='hp'&&inPoly(pos,ZG.student)),inDanger=inPoly(pos,ZG.danger);
  const hurt=!!(P.coll||P.st||vs>3.6||fwd>6.5),free=SV.mode==='free';
  let grade=hurt?'ТРАВМА':fail?'ПАДЕНИЕ':free?(inZone?'В ЗОНЕ':'ВНЕ ЗОНЫ'):d<=2?'ОТЛИЧНО':d<=C.R?'ХОРОШО':inZone?'В ЗОНЕ':'ВНЕ ЗОНЫ';
  // как пилот встречает землю: пробежка, кувырок вперёд, на пятую точку, завал на бок
@@ -238,6 +243,7 @@ function land(gx,gy,w,t){
  else if(P.fl!==null&&P.fl<1.2)tips.push('Подрыв поздно: купол не успел выйти в горизонт.');
  else if(P.fl!==null)tips.push(`Подрыв вовремя, на ${P.fl.toFixed(1)} м.`);
  if(P.gates){const ok=P.gates.filter(g=>g.st>0).length;tips.push(`Точки коробочки: ${ok} из 3 (`+P.gates.map(g=>g.h+' — '+(g.st>0?'✓ '+Math.round(g.off)+' м':g.off!=null?'мимо, ближе всего '+Math.round(g.off)+' м':'не дошёл')).join(', ')+'). Засчитывается, если пролетел ближе 45 м.')}
+ if(P.spirals)tips.push('Была спираль (скручивание с зажатой клевантой). На учебных прыжках это запрещено: купол быстро теряет высоту и может не выйти в горизонт до земли.');
  if(P.stDive)tips.push('Выход из срыва: клеванты отпущены резко — купол клюнул вперёд и потерял много высоты. Отпускай плавно, за 1,5–2 секунды, давая куполу набрать скорость.');
  if(P.lowT>.5)tips.push('Резкий поворот ниже 40 м. В повороте купол ныряет и теряет высоту.');
  if((P.tuMax||0)>.25)tips.push(`Заход через болтанку за препятствием: при ветре ${ws.toFixed(1)} м/с за лесополосой или домом тянется ротор на 10–15 его высот по ветру. Заходи так, чтобы последние 50 м не проходили с подветренной стороны деревьев и построек.`);
@@ -245,8 +251,8 @@ function land(gx,gy,w,t){
  if(!free&&d>C.R&&ws>=1){const al=((P.x-TG[0])*w.x+(P.y-TG[1])*w.y)/ws;
   tips.push(al>0?'Перелёт по ветру. Выходи на прямую ниже или тормози на прямой.':'Недолёт. Ветер съел скорость: держись ближе к цели с наветренной стороны.')}
  if(abs(lat)>1.2)tips.push('Боковой ветер. После подрыва скорость вперёд гаснет, а снос остаётся. На последних 10–15 м доверни носом в ветер, даже ценой отхода от линии на цель.');
- const ZN={student:'студенческой (зелёной)',main:'основной (жёлтой)',fast:'скоростной (красной)',hp:'высокоскоростной'}[C.zone];
- if(!inZone&&!inDanger)tips.push(`Посадка вне ${ZN} зоны для твоего купола.`);
+ const ZN={student:'студенческой (зелёной)',main:'основной (жёлтой)',fast:'скоростной (красной)',hp:'высокоскоростной или студенческой'}[C.zone];
+ {const ae=OSM.find(o=>o.c==='A'),inAe=ae&&inPoly(pos,ae.p);if(!inZone&&!inDanger)tips.push(inAe?`Посадка вне ${ZN} зоны для твоего купола.`:'Сел в поле за пределами аэродрома. Так можно, но купол придётся нести пешком — старайся садиться в свою зону.')}
  if(P.low.rwy)tips.push('Пересёк зону ВПП ниже 300 м — так нельзя.');if(P.low.nofly)tips.push('Пролетел ниже 300 м над постройками или зоной высокоскоростных — эта зона закрыта.');
  if(!fail&&vs>2.5)tips.push('Касание жестковато, подрыв можно сделать глубже.');
  SV.j++;if(!free&&!fail&&(SV.best[C.a]==null||d<SV.best[C.a]))SV.best[C.a]=Math.round(d*10)/10;save();
@@ -370,7 +376,7 @@ const RD=-55;
 // Разметка — по 2ГИС, размеры и места — по ортофото дрона DJI_0672 (0,3 м/px)
 const TA=[152,591],TU=[.625,-.781],TN_=[.784,.627],UA=-51.3,TN=(t,n)=>[TA[0]+TU[0]*t+TN_[0]*n,TA[1]+TU[1]*t+TN_[1]*n];
 // Ниже 300 м нельзя над постройками и зоной высокоскоростных: граница вдоль линии флажков (n=−13) от стоянки самолётов до музея
-ZONES.nofly=[TN(145,-13),TN(-300,-13),TN(-300,150),TN(150,150)];ZG.nofly=ZONES.nofly.map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+ZONES.nofly=[TN(145,-13),TN(-300,-13),TN(-300,92),TN(150,92)];ZG.nofly=ZONES.nofly.map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
 const TOWN=[ // t,n,длина(вдоль),ширина,высота,стены,крыша,конёк — сверено с ортофото DJI_0672 и 2ГИС
  [51,25,50,18,6,'#e9edf1','#6c7178',1.4],                                   // большой ангар (t 26–76, n 16–34)
  [11,12,8,6,.15,'#dcdad4','#e4e2dc',0],                                      // белая бетонная плита (не здание)
@@ -673,6 +679,10 @@ function tubeM(B,a,b,r,col,sg=5){const d=V3n(V3s(b,a)),t=V3n(abs(d[2])<.9?V3c(d,
  for(let i=0;i<sg;i++){const q0=i/sg*6.283,q1=(i+1)/sg*6.283,n0=V3a(V3k(t,cos(q0)),V3k(s,sin(q0))),n1=V3a(V3k(t,cos(q1)),V3k(s,sin(q1)));
   const A0=V3a(a,V3k(n0,r)),A1=V3a(a,V3k(n1,r)),B0=V3a(b,V3k(n0,r)),B1=V3a(b,V3k(n1,r));
   vtx(B,A0,n0,col);vtx(B,A1,n1,col);vtx(B,B1,n1,col);vtx(B,A0,n0,col);vtx(B,B1,n1,col);vtx(B,B0,n0,col)}}
+// конус по оси a→b (радиус у a — r0, у b — r1), сглаженные нормали: сложенный вытяжной купол
+function coneAx(B,a,b,r0,r1,col,sg=8){const d=V3n(V3s(b,a)),L=hypot(...V3s(b,a)),t=V3n(abs(d[2])<.9?V3c(d,[0,0,1]):V3c(d,[1,0,0])),s=V3c(d,t),k=(r1-r0)/L;
+ for(let i=0;i<sg;i++){const q0=i/sg*6.283,q1=(i+1)/sg*6.283,n0=V3a(V3k(t,cos(q0)),V3k(s,sin(q0))),n1=V3a(V3k(t,cos(q1)),V3k(s,sin(q1))),N0=V3n(V3a(n0,V3k(d,-k))),N1=V3n(V3a(n1,V3k(d,-k)));
+  const A0=V3a(a,V3k(n0,r0)),A1=V3a(a,V3k(n1,r0)),B0=V3a(b,V3k(n0,r1)),B1=V3a(b,V3k(n1,r1));vtx(B,A0,N0,col);vtx(B,A1,N1,col);vtx(B,B1,N1,col);vtx(B,A0,N0,col);vtx(B,B1,N1,col);vtx(B,B0,N0,col)}}
 function sphereM(B,c,r,col){const S=8,Rg=5,pt=(i,j)=>{const th=j/Rg*Math.PI,ph=i/S*6.283;return[sin(th)*cos(ph),sin(th)*sin(ph),cos(th)]};
  for(let i=0;i<S;i++)for(let j=0;j<Rg;j++){const a=pt(i,j),b=pt(i+1,j),d=pt(i,j+1),e=pt(i+1,j+1),P=n=>V3a(c,V3k(n,r)),cc=n=>sh3(col,.85+.25*n[2]);
   vtx(B,P(a),a,cc(a));vtx(B,P(d),d,cc(d));vtx(B,P(e),e,cc(e));vtx(B,P(a),a,cc(a));vtx(B,P(e),e,cc(e));vtx(B,P(b),b,cc(b))}}
@@ -819,7 +829,7 @@ function canopyM(B){const g=canopyGeo(),{ribs,fw,rt,up,ch,tk,Ln}=g,z=P.alt,n=rib
  // вытяжной купол на стропе-соединителе
  if(near){const r4=ribs[n>>1],r5=ribs[(n>>1)+1],top=[0,1,2].map(i=>(r4.md[i]+r5.md[i])/2+up[i]*tk*.4),sw=sin(tt*3.1)*.25,
    b1=[0,1,2].map(i=>top[i]-fw[i]*1.6+up[i]*.25+rt[i]*sw*.4),pc=[0,1,2].map(i=>top[i]-fw[i]*3.1+up[i]*.15+rt[i]*sw);
-  lineM(B,top,b1,.02,hex3('#e8e8e8'));lineM(B,b1,pc,.02,hex3('#e8e8e8'));MAT=1;tubeM(B,pc,[0,1,2].map(i=>pc[i]-fw[i]*.55+rt[i]*sin(tt*9)*.08),.15,c2,5)}
+  lineM(B,top,b1,.02,hex3('#e8e8e8'));lineM(B,b1,pc,.02,hex3('#e8e8e8'));MAT=1;coneAx(B,pc,[0,1,2].map(i=>pc[i]-fw[i]*.7+rt[i]*sin(tt*9)*.1+up[i]*sin(tt*7)*.05),.02,.3,c2,8)}
  MAT=0}
 // погасший купол на траве: те же секции и цвета, что в полёте (края и центр — второй цвет, нос — полосой), ткань лежит складками
 function lyingM(B,c0,dir,sp,ch,c1,c2){const n=9,rt=[-dir[1],dir[0]],k=MAT;MAT=1;
@@ -1336,7 +1346,7 @@ function torusM(B,c,d,R0,r,col,seg=36){const ax=[d[0],d[1],0],u=[0,0,1],v=[-d[1]
  const P=(a,b)=>{const ca=cos(a),sa=sin(a),cb=cos(b),sb=sin(b),rr=R0+r*cb;return[c[0]+(v[0]*ca)*rr+ax[0]*r*sb,c[1]+(v[1]*ca)*rr+ax[1]*r*sb,c[2]+u[2]*sa*rr]};
  for(let i=0;i<seg;i++)for(let j=0;j<5;j++){const a0=i/seg*6.283,a1=(i+1)/seg*6.283,b0=j/5*6.283,b1=(j+1)/5*6.283;quadM(B,P(a0,b0),P(a1,b0),P(a1,b1),P(a0,b1),col,[0,0,1])}MAT=k}
 function gatesM(B){}
-function drawToast(){if(!(P.toastT>0)||!P.toast||mode!=='fly')return;const b=$('tl').getBoundingClientRect().bottom+(P.warnT>0?64:10),tw=min(W-32,300),x=(W-tw)/2,al=min(1,P.toastT/.5),ok=P.toast[1];
+function drawToast(){if(!(P.toastT>0)||!P.toast||mode!=='fly')return;const b=$('tl').getBoundingClientRect().bottom+(P.warnT>0||P.evT>0?74:10),tw=min(W-32,300),x=(W-tw)/2,al=min(1,P.toastT/.5),ok=P.toast[1];
  X.save();X.globalAlpha=al;X.fillStyle=ok?'rgba(14,40,18,.9)':'rgba(46,16,14,.9)';X.strokeStyle=ok?'#9be36b':'#ff5a4e';X.lineWidth=2;X.beginPath();X.roundRect?X.roundRect(x,b,tw,32,8):X.rect(x,b,tw,32);X.fill();X.stroke();
  X.fillStyle=ok?'#9be36b':'#ff5a4e';X.font='700 13px "Chakra Petch",monospace';X.textAlign='center';X.fillText((ok?'◯ ':'✕ ')+P.toast[0],W/2,b+21);X.restore()}
 // числа 300 / 200 / 100 в небе: всегда лицом к экрану, следующее мигает оранжевым, размер как у щита ~14 м
@@ -1347,9 +1357,9 @@ function drawGateMark(){const G=P.gates;if(!G||mode!=='fly')return;const nx=G.fi
   X.globalAlpha=al;X.font=`800 ${px}px "Chakra Petch",monospace`;X.lineWidth=max(2,px*.08);X.strokeStyle='rgba(20,14,4,.75)';X.strokeText(g.h,s2[0],s2[1]);X.fillStyle=`rgb(${col})`;X.fillText(g.h,s2[0],s2[1]);
   if(i===nx&&!g.st){X.globalAlpha=.85;X.font='600 12px "Chakra Petch",monospace';X.lineWidth=3;const t=`${Math.round(hypot(g.p[0]-P.x,g.p[1]-P.y))} м`;X.strokeText(t,s2[0],s2[1]+px*.62+8);X.fillStyle='#ffe0a0';X.fillText(t,s2[0],s2[1]+px*.62+8)}});
  X.restore()}
-function drawWarn(){if(!(P.warnT>0)||mode!=='fly')return;const y=$('tl').getBoundingClientRect().bottom+10,al=min(1,P.warnT/.5),tw=min(W-32,380),x=(W-tw)/2;
+function drawWarn(){if(mode!=='fly')return;const ev=P.evT>0;if(!ev&&!(P.warnT>0))return;const msg=ev?P.ev:P.warn,y=$('tl').getBoundingClientRect().bottom+10,al=min(1,(ev?P.evT:P.warnT)/.5),tw=min(W-32,380),x=(W-tw)/2;
  X.save();X.globalAlpha=al;X.font='600 13px "Chakra Petch",monospace';
- const words=P.warn.split(' '),lines=[''];for(const w of words){const t=(lines[lines.length-1]+' '+w).trim();if(X.measureText(t).width>tw-60&&lines[lines.length-1])lines.push(w);else lines[lines.length-1]=t}
+ const words=msg.split(' '),lines=[''];for(const w of words){const t=(lines[lines.length-1]+' '+w).trim();if(X.measureText(t).width>tw-60&&lines[lines.length-1])lines.push(w);else lines[lines.length-1]=t}
  const h=16+lines.length*17;X.fillStyle='rgba(40,32,6,.92)';X.strokeStyle='#f5c842';X.lineWidth=2;X.beginPath();X.roundRect?X.roundRect(x,y,tw,h,8):X.rect(x,y,tw,h);X.fill();X.stroke();
  const cy=y+h/2;X.fillStyle='#f5c842';X.beginPath();X.moveTo(x+24,cy-12);X.lineTo(x+38,cy+11);X.lineTo(x+10,cy+11);X.closePath();X.fill();
  X.fillStyle='#28200a';X.font='800 15px "Chakra Petch",monospace';X.textAlign='center';X.fillText('!',x+24,cy+9);
@@ -1362,7 +1372,7 @@ function drawRadar(){
  const w=wind(P.alt),wv=rp(w.x/(w.s||1),w.y/(w.s||1));
  X.strokeStyle='rgba(255,122,26,.55)';X.lineWidth=3;X.beginPath();X.moveTo(cx-wv[0]*rr*.8,cy-wv[1]*rr*.8);X.lineTo(cx+wv[0]*rr*.8,cy+wv[1]*rr*.8);X.stroke();
  const ax=cx+wv[0]*rr*.8,ay=cy+wv[1]*rr*.8,aa=atan2(wv[1],wv[0]);X.fillStyle='rgba(255,122,26,.8)';X.beginPath();X.moveTo(ax+cos(aa)*6,ay+sin(aa)*6);X.lineTo(ax+cos(aa+2.4)*9,ay+sin(aa+2.4)*9);X.lineTo(ax+cos(aa-2.4)*9,ay+sin(aa-2.4)*9);X.fill();
- if(SV.mode==='free'&&mode!=='brief'){X.strokeStyle='rgba(155,227,107,.9)';X.lineWidth=2;X.beginPath();ZG[C.zone].forEach((q,i)=>{const v=rp(q[0]-P.x,q[1]-P.y);i?X.lineTo(cx+v[0]*k,cy+v[1]*k):X.moveTo(cx+v[0]*k,cy+v[1]*k)});X.closePath();X.stroke()}else{
+ if(SV.mode==='free'&&mode!=='brief'){X.strokeStyle='rgba(155,227,107,.9)';X.lineWidth=2;for(const zk of C.zone==='hp'?['hp','student']:[C.zone]){X.beginPath();ZG[zk].forEach((q,i)=>{const v=rp(q[0]-P.x,q[1]-P.y);i?X.lineTo(cx+v[0]*k,cy+v[1]*k):X.moveTo(cx+v[0]*k,cy+v[1]*k)});X.closePath();X.stroke()}}else{
  let t=rp(TG[0]-P.x,TG[1]-P.y);const tl=hypot(...t)*k;if(tl>rr-6)t=t.map(v=>v/hypot(...t)*(rr-6)/k);
  X.fillStyle='#d8c49a';X.beginPath();X.arc(cx+t[0]*k,cy+t[1]*k,max(3,C.R*k),0,7);X.fill();X.fillStyle='#ff7a1a';X.beginPath();X.arc(cx+t[0]*k,cy+t[1]*k,2.5,0,7);X.fill();}
  if(P.gx!=null&&P.gs>.1){const v=rp(P.gx/P.gs,P.gy/P.gs);X.strokeStyle='#9be36b';X.lineWidth=2;X.beginPath();X.moveTo(cx,cy);X.lineTo(cx+v[0]*rr*.6,cy+v[1]*rr*.6);X.stroke()}
