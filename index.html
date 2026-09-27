@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Клеванта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+:root{--ink:#f3efe2;--dim:#b9b8a6;--panel:rgba(14,20,16,.72);--edge:rgba(243,239,226,.18);--sig:#ff7a1a;--ok:#9be36b;--bad:#ff5a4e;color-scheme:dark}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;background:#7fb2d9;color:var(--ink);font:500 15px/1.35 "Chakra Petch",ui-monospace,Menlo,Consolas,monospace;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{position:fixed;inset:0;touch-action:none}#g{pointer-events:none}
+.hud{position:fixed;pointer-events:none;font-variant-numeric:tabular-nums}
+#tl{top:calc(152px + env(safe-area-inset-top,0px));left:16px;display:grid;gap:2px}
+#alt,#wtx{display:none}
+#hudtop{position:fixed;left:0;top:env(safe-area-inset-top,0px);width:1px;height:1px}
+#alt{font-size:44px;font-weight:700;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.45)}
+#alt small{font-size:18px;color:var(--ink);opacity:.75}
+#spd,#dist{font-size:14px;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+#phase{max-width:min(56vw,320px);font-size:13px;background:var(--panel);border:1px solid var(--edge);padding:4px 8px;border-radius:4px;margin-top:6px}
+#tr{top:calc(12px + env(safe-area-inset-top,0px));right:16px;display:grid;justify-items:center;gap:4px}
+#rad{width:120px;height:120px}
+#wtx{font-size:13px;background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:2px 8px}
+.tg{bottom:calc(16px + env(safe-area-inset-bottom,0px));width:26px;height:120px;border:1px solid var(--edge);background:var(--panel);border-radius:4px;overflow:hidden}
+.tg i{position:absolute;left:0;right:0;top:0;height:0;background:var(--sig)}
+.tg b{position:absolute;left:0;right:0;top:50%;border-top:1px dashed var(--ink);opacity:.5}
+#tgL{left:16px}#tgR{right:16px}
+.tgl{bottom:calc(142px + env(safe-area-inset-bottom,0px));font-size:11px;letter-spacing:.08em;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+#tglL{left:16px}#tglR{right:16px}
+#tape{right:56px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:14px;height:200px;border:1px solid var(--edge);background:var(--panel);border-radius:3px}
+#tape em{position:absolute;left:0;right:0;background:rgba(155,227,107,.35);bottom:13.3%;height:6.7%}
+#tape i{position:absolute;left:-5px;right:-5px;height:3px;background:var(--ink);bottom:0}
+#tape u{position:absolute;right:18px;bottom:calc(13.3% - 7px);font-size:10px;text-decoration:none;color:var(--ok);white-space:nowrap}
+.pn{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:rgba(10,14,11,.3)}
+.card{width:min(440px,100%);max-height:calc(100% - 8px);overflow:auto;background:rgba(16,22,18,.92);border:1px solid var(--edge);border-radius:8px;padding:20px;display:grid;gap:14px}
+h1{margin:0;font-size:34px;letter-spacing:.04em;line-height:1}
+h2{margin:0;font-size:30px;line-height:1}
+p{margin:0;color:var(--dim)}
+.cans{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cans button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--edge);border-radius:6px;padding:8px;text-align:left;cursor:pointer;display:grid;gap:2px}
+.cans button[aria-pressed=true]{border-color:var(--sig);background:rgba(255,122,26,.14)}
+.cans.wx{grid-template-columns:repeat(4,1fr);gap:6px}.cans.sea{grid-template-columns:repeat(3,1fr)}.cans.wx button{text-align:center;padding:8px 2px;font-size:13px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--edge);border-radius:8px;overflow:hidden}
+.seg button{font:700 15px "Chakra Petch",ui-monospace,monospace;letter-spacing:.04em;color:var(--dim);background:transparent;border:0;padding:12px 6px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--sig);color:#1a1208}
+.lbl{margin-bottom:6px}.cans.alts{grid-template-columns:repeat(3,1fr)}
+.help summary{cursor:pointer;color:var(--ink)}.help ul{margin-top:6px}
+.pbtn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:52px;height:40px;border-radius:8px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);font:700 14px "Chakra Petch",monospace;cursor:pointer;z-index:2}
+.cans small{color:var(--dim);font-size:12px}
+.go{font:700 18px "Chakra Petch",ui-monospace,monospace;letter-spacing:.08em;color:#1a1208;background:var(--sig);border:0;border-radius:6px;padding:14px;cursor:pointer}
+.go.alt{background:transparent;color:var(--ink);border:1px solid var(--edge)}
+.go:focus-visible,.cans button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-variant-numeric:tabular-nums}
+dt{color:var(--dim)}dd{margin:0}
+ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.meta{font-size:12px;color:var(--dim)}
+</style>
+</head><body>
+
+<canvas id="g"></canvas><canvas id="c"></canvas>
+<div class="hud" id="hudtop"></div><div class="hud" id="tl"><div id="alt">300<small> м</small></div><div id="spd"></div><div id="dist"></div><div id="phase"></div></div>
+<div class="hud" id="tr"><div id="rad"></div><span id="wtx"></span></div>
+<div class="hud tgl" id="tglL">ЛЕВАЯ</div><div class="hud tgl" id="tglR">ПРАВАЯ</div>
+<div class="hud tg" id="tgL"><b></b><i></i></div><div class="hud tg" id="tgR"><b></b><i></i></div>
+<div class="hud" id="tape" hidden><em></em><u>подрыв 2–3 м</u><i></i></div>
+
+<div class="pn" id="brief"><div class="card">
+<div><h1>КЛЕВАНТА</h1><p>Тренажёр захода и посадки · ДЗ «Танай»</p></div>
+<div class="seg" id="modes"><button type="button" data-m="train">Тренировка</button><button type="button" data-m="free">Свободный полёт</button></div>
+<p class="meta" id="modeTxt"></p>
+<div><p class="meta lbl">Купол</p><div class="cans" id="cans"></div></div>
+<div id="freeOpts" hidden><p class="meta lbl">Высота раскрытия</p><div class="cans wx alts" id="alts"></div><p class="meta lbl" style="margin-top:10px">Ветер у земли</p><div class="cans wx" id="winds"></div></div>
+<details class="meta help"><summary>Управление</summary><ul class="meta"><li>Держи левую или правую половину экрана: клеванта идёт вниз. Отпусти: возвращается.</li><li>Клавиатура: ← → или A D, обе сразу: ↓ или пробел.</li><li>Оглядеться: тяни пальцем в верхней части экрана (мышью — правой кнопкой) или Q E R F.</li><li>Радар справа сверху: цель, круг и ветер. Садись против ветра, на 2–3 м тяни обе до конца.</li></ul></details>
+<button class="go" id="goB">ПРЫЖОК</button>
+<p class="meta" id="stat"></p>
+</div></div>
+
+<button type="button" class="pbtn" id="pauseB" hidden aria-label="Пауза">❚❚</button>
+<div class="pn" id="pause" hidden><div class="card">
+<h2>ПАУЗА</h2><p id="pInfo"></p>
+<button class="go" id="resB">ПРОДОЛЖИТЬ</button>
+<button class="go alt" id="rjB">ПРЫЖОК ЗАНОВО</button>
+<button class="go alt" id="mmB">ГЛАВНОЕ МЕНЮ</button>
+</div></div>
+
+<div class="pn" id="res" hidden><div class="card">
+<h2 id="grade"></h2><p id="why"></p>
+<dl id="facts"></dl>
+<ul id="tips"></ul>
+<button class="go" id="again">ЕЩЁ ПРЫЖОК</button>
+<button class="go alt" id="menu">ГЛАВНОЕ МЕНЮ</button>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id),cv=$('c'),X=cv.getContext('2d');
+const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.expand();tg.ready()}
+// V — горизонт. скорость, S — снижение, T — поворот (рад/с), R — зачётный круг
+const cl=(v,a,b)=>v<a?a:v>b?b:v,R=Math.random,{sin,cos,hypot,atan2,abs,max,min}=Math;
+const KG=85,LB=KG*2.2046;
+const CAN=[
+ {a:230,n:'Начальный',zone:'student',tg:[-30,537],R:20,c:'#f3f1ea',c2:'#c9c4b5'},
+ {a:190,n:'Переходной',zone:'main',tg:[136,513],R:15,c:'#f28c28',c2:'#b3541a'},
+ {a:150,n:'Спортивный',zone:'main',tg:[136,513],R:10,c:'#2a2e38',c2:'#e6e1d3'},
+ {a:110,n:'Высокий',zone:'hp',tg:[179,547],R:5,c:'#ff4fa3',c2:'#38d6e8'}];
+// Калибровка на WL 1.0 (фунт/фт²), прямой полёт без торможения. Скорости растут как корень из загрузки.
+// V — вперёд, S — снижение (м/с), T — поворот (рад/с), D — насколько купол ныряет в повороте
+const V1=8,S1=3.8;
+// Отклик: большой купол требует глубже и дольше тянуть клеванту (tD — ход до упора, p — «мёртвая» зона малых отклонений),
+// а поворот раскручивается с запаздыванием tau. Маленький купол отвечает сразу.
+CAN.forEach(c=>{const wl=LB/c.a,k=Math.sqrt(wl);c.wl=wl;c.V=+(V1*k).toFixed(1);c.S=+(S1*k).toFixed(1);c.T=1.1*wl**1.4;c.D=.55*wl**1.5;
+ c.tD=cl(1.35-.5*wl,.5,1.1);c.tU=cl(2.2-wl,.45,1.6);c.tauD=cl(2.4-1.2*wl,.3,1.6);c.tau=cl(1.3-.6*wl,.25,1);c.p=cl(2.1-.8*wl,1,1.6);c.resp=wl<.8?'медленный':wl<1.1?'средний':wl<1.4?'быстрый':'резкий'});
+let SV={j:0,ci:0,best:{}};try{Object.assign(SV,JSON.parse(localStorage.getItem('klevanta')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('klevanta',JSON.stringify(SV))}catch(e){};if(tg&&tg.CloudStorage)try{tg.CloudStorage.setItem('klevanta',JSON.stringify(SV))}catch(e){}};
+
+let W,H,D,RB;function rs(){D=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*D;cv.height=H*D;cv.style.width=W+'px';cv.style.height=H+'px';const g=$('g');g.width=W*D;g.height=H*D;g.style.width=W+'px';g.style.height=H+'px';RB=$('rad').getBoundingClientRect()}
+addEventListener('resize',rs);rs();
+
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mix=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t),css=(c,k=1)=>{if(!FOG)return`rgb(${c[0]*k|0},${c[1]*k|0},${c[2]*k|0})`;const h=WX.hz;return`rgb(${c[0]*k+(h[0]*255-c[0]*k)*FOG|0},${c[1]*k+(h[1]*255-c[1]*k)*FOG|0},${c[2]*k+(h[2]*255-c[2]*k)*FOG|0})`};
+// FOG — доля дымки для объекта на канве (0 — рядом), считается по расстоянию так же, как в шейдере
+let FOG=0;const fogA=d=>(1-Math.exp(-d/WX.fd[1]))*.92;
+let mode='brief',P,C,w0,wa,time=0;
+// Ветер растёт с высотой (на 600 м ≈1,8× от земного) и поворачивает по часовой на ~25°. Плюс порывы.
+function wind(alt){const h=min(max(alt,0),600)/600,k=w0*(1+.8*Math.sqrt(h))*(1+.15*sin(time*.7)+.08*sin(time*1.9)),a=wa+.44*h+.14*sin(time*.21)+.06*sin(time*.53);return{x:cos(a)*k,y:sin(a)*k,s:k}}
+
+function jump(){
+ C=CAN[SV.ci];const free=SV.mode==='free',A0=free?SV.alt||600:600,WR=free?WINDS[SV.wind||'rand']:WINDS.rand;w0=Math.round((WR[1]+R()*(WR[2]-WR[1]))*10)/10;wa=R()*6.283;time=0;
+ const T=A0/C.S,up=wa+.3+Math.PI,dd=min(.45*w0*min(T,600/C.S)+200+(A0-600)*.4,1600),lat=(R()-.5)*400;
+ TG=[C.tg[0]-TGT[0],C.tg[1]-TGT[1]];
+ P={x:TG[0]+cos(up)*dd-sin(up)*lat,y:TG[1]+sin(up)*dd+cos(up)*lat,alt:A0,low:{},h:R()*6.283,va:C.V,vs:C.S,L:0,R:0,yr:0,
+  stT:0,st:false,rec:0,fl:null,lowT:0,flips:0,ls:0,t:0,gs:0};
+ cm.yaw=cm.by=P.h;cm.pit=cm.bp=.8;LK.yaw=LK.pit=0;AIRP=null;mode='fly';mkBots();$('brief').hidden=true;$('res').hidden=true;$('pause').hidden=true;$('pauseB').hidden=false;$('phase').hidden=free;P.gates=free?null:mkGates();
+}
+
+// Ввод
+const ptr=new Map(),keys=new Set();
+// Обзор: тянуть в верхней части экрана (или правой кнопкой мыши где угодно), клавиши Q E — по кругу, R F — вверх/вниз.
+// Отпустил — через секунду взгляд плавно возвращается вперёд.
+const LK={yaw:0,pit:0,id:null,x:0,y:0,idle:0};
+cv.addEventListener('pointerdown',e=>{if(mode!=='fly')return;e.preventDefault();
+ if(e.clientY<H*.4||e.button===2){LK.id=e.pointerId;LK.x=e.clientX;LK.y=e.clientY;return}
+ ptr.set(e.pointerId,e.clientX<W/2?'L':'R')});
+cv.addEventListener('pointermove',e=>{if(e.pointerId!==LK.id)return;LK.yaw-=(e.clientX-LK.x)*.009;LK.pit=cl(LK.pit+(e.clientY-LK.y)*.006,-.75,1.1);LK.x=e.clientX;LK.y=e.clientY;LK.idle=0});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+const pu=e=>{ptr.delete(e.pointerId);if(e.pointerId===LK.id)LK.id=null};
+['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,pu));
+addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){pause(mode==='fly');return}if(mode==='pause')return;keys.add(e.code);if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault();if(e.code==='Enter'&&mode!=='fly')jump()});
+addEventListener('keyup',e=>keys.delete(e.code));
+addEventListener('blur',()=>{keys.clear();ptr.clear()});
+function held(s){for(const v of ptr.values())if(v===s)return true;
+ return keys.has('ArrowDown')||keys.has('KeyS')||keys.has('Space')||(s==='L'?keys.has('ArrowLeft')||keys.has('KeyA'):keys.has('ArrowRight')||keys.has('KeyD'))}
+
+// Турбулентность за препятствиями: за лесополосой, домом, рядом деревьев с подветренной стороны — ротор.
+// Тянется по ветру примерно на 15 высот препятствия и до двух высот вверх, сильнее всего в 1–5 высотах за ним; сила растёт с ветром у земли.
+// Препятствия растеризованы в сетку 5 м (высота в метрах): лесополосы и ряды деревьев, дома городка и аэродрома, ели
+let OBS=null;const OBS_N=1120,OBS_C=5;
+function mkObs(){OBS=new Uint8Array(OBS_N*OBS_N);const put=(x,y,h)=>{const i=Math.floor(x/OBS_C+OBS_N/2),j=Math.floor(y/OBS_C+OBS_N/2);if(i<0||j<0||i>=OBS_N||j>=OBS_N)return;const k=j*OBS_N+i;OBS[k]=max(OBS[k],h)};
+ if(!TREES)mkTrees();for(const t of TREES)put(t[0],t[1],Math.round(t[2]+t[3]*1.2));
+ for(const b of BLD){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of b.p){x0=min(x0,p[0]);y0=min(y0,p[1]);x1=max(x1,p[0]);y1=max(y1,p[1])}
+  const h=Math.round(b.h+(b.ridge||0));for(let x=x0;x<=x1;x+=OBS_C/2)for(let y=y0;y<=y1;y+=OBS_C/2)if(inPoly([x,y],b.p))put(x,y,h)}
+ for(const[t,n]of FIRS){const p=TT(t,n);put(p[0],p[1],9)}}
+function turbAt(x,y,z){if(!OBS)mkObs();const w=wind(0),ws=w.s;if(ws<2.5)return 0;const ux=w.x/ws,uy=w.y/ws;let I=0;
+ for(let s=3;s<=300;s+=4){const qx=x-ux*s,qy=y-uy*s,i=Math.floor(qx/OBS_C+OBS_N/2),j=Math.floor(qy/OBS_C+OBS_N/2);if(i<0||j<0||i>=OBS_N||j>=OBS_N)continue;
+  const h=OBS[j*OBS_N+i];if(!h||z>2.2*h)continue;const r=s/h;if(r>15)continue;I=max(I,(r<1?.4+.6*r:1)*(1-r/15)*(1-z/(2.2*h)))}
+ return I*cl((ws-2.5)/5,0,1.3)}
+// Физика
+function step(dt){
+ time+=dt;
+ P.L=cl(P.L+(held('L')?dt/C.tD:-dt/C.tU),0,1);P.R=cl(P.R+(held('R')?dt/C.tD:-dt/C.tU),0,1);
+ const b=min(P.L,P.R),t=P.R-P.L,ti=Math.sign(t)*abs(t)**C.p;P.t=t;
+ {const yt=ti*C.T*(.5+.5*P.va/C.V);P.yr+=(yt-P.yr)*min(1,dt/(abs(yt)<abs(P.yr)?C.tauD:C.tau))}
+ const at=cl(abs(P.yr)/C.T,0,1);
+ // Отпустил клеванты после торможения: купол «подныривает» — клюёт носом, разгоняется выше крейсерской и сильнее снижается,
+ // затем маятником выходит в горизонт и лишняя скорость уходит в подъёмную силу. Чем глубже и быстрее отпустил, тем сильнее
+ {const db=(P.pb??b)-b;if(db>0)P.dv=(P.dv||0)+db*(.5+.5*C.wl);P.pb=b;P.dv=(P.dv||0)*Math.exp(-dt/2)}
+ // болтанка: воздух то проваливает, то подбрасывает, купол рыскает и качается; в среднем — просадка (ротор тянет вниз)
+ {const I=turbAt(P.x,P.y,P.alt);P.tu=(P.tu||0)+(I-(P.tu||0))*min(1,dt*3);if(P.alt<40)P.tuMax=max(P.tuMax||0,P.tu);
+  const T=time,n1=(sin(T*2.1+1)+.6*sin(T*4.7+2)+.4*sin(T*8.3))/2,n2=(sin(T*1.7+4)+.6*sin(T*3.9)+.4*sin(T*7.1+1))/2,n3=(sin(T*1.3+2)+.5*sin(T*3.3+5))/1.5;
+  P.tz=P.tu*(.9+1.7*n1);P.ty=P.tu*.5*n2;P.tv=P.tu*C.V*.18*n3;P.tr=P.tu*.28*n2}
+ const vt=C.V*(1-.7*b)+at*C.V*(.15+.2*C.wl)+P.dv*C.V*.35+P.tv;
+ P.va+=(vt-P.va)*min(1,dt/(P.va>vt?.9:1.8/(1+4*P.dv)));
+ const lift=max(0,P.va-vt);
+ let sT=C.S*(1-.5*b)+at*C.S*C.D*2.4-lift+P.dv*C.S*.8+P.tz;
+ if(!P.st){if(b>.95&&P.va<.5*C.V)P.stT+=dt;else P.stT=max(0,P.stT-dt*2);if(P.stT>1.6){P.st=true;P.rec=0}}
+ else{sT=11;P.va+=(.15*C.V-P.va)*min(1,dt);if(b<.3){P.rec+=dt;if(P.rec>1.2){P.st=false;P.stT=0;P.va=.6*C.V}}else P.rec=0}
+ P.vs+=(max(-1.5,sT)-P.vs)*min(1,dt/.35);
+ if(!P.st)P.h+=(P.yr+P.ty)*dt;else P.yr*=.9;
+ const w=wind(P.alt),gx=cos(P.h)*P.va+w.x,gy=sin(P.h)*P.va+w.y;
+ P.x+=gx*dt;P.y+=gy*dt;P.alt-=P.vs*dt;P.gs=hypot(gx,gy);P.gx=gx;P.gy=gy;P.lat=-gx*sin(P.h)+gy*cos(P.h);
+ if(b>=.8&&P.fl===null)P.fl=P.alt;if(b<.3)P.fl=null;
+ if(P.alt<40&&P.alt>2)P.lowT=max(P.lowT,at);
+ {let wn='';if(P.alt<300&&P.alt>2){const q=[P.x,P.y];if(inPoly(q,ZG.danger)){P.low.rwy=1;wn='Ниже 300 м над ВПП и стоянкой самолётов — запрещено'}
+  else if(inPoly(q,ZG.nofly)&&!(C.zone==='hp'&&inPoly(q,ZG.hp))){P.low.nofly=1;wn='Ниже 300 м над постройками и зоной высокоскоростных — запрещено'}}
+  if(wn){if(P.warn!==wn&&tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred('warning');P.warn=wn;P.warnT=2}else P.warnT=max(0,(P.warnT||0)-dt)}
+ if(P.alt<150){const s=t>.3?1:t<-.3?-1:0;if(s&&s!==P.ls){if(P.ls)P.flips++;P.ls=s}}
+ for(const b of BOTS){if(!b.on)continue;const dd=hypot(b.x-P.x,b.y-P.y),dz=abs(b.alt-P.alt);if(dd<6&&dz<5&&!P.coll){P.coll=true;P.st=true}
+  const d3=hypot(dd,dz);if(d3<(P.nb||1e9))P.nb=d3}
+ gateStep();if(P.toastT>0)P.toastT-=dt;
+ if(P.alt<=0){P.alt=0;land(gx,gy,w,at)}
+}
+
+function land(gx,gy,w,t){
+ mode='done';ptr.clear();$('pauseB').hidden=true;
+ const g=hypot(gx,gy),d=hypot(P.x-TG[0],P.y-TG[1]),vs=P.vs,ws=w.s;
+ const cosU=ws>.1?-(cos(P.h)*w.x+sin(P.h)*w.y)/ws:1;
+ const dir=ws<2?'ветер слабый':cosU>.5?'против ветра':cosU<-.5?'по ветру':'боком к ветру';
+ const fwd=gx*cos(P.h)+gy*sin(P.h),lat=-gx*sin(P.h)+gy*cos(P.h),lt=abs(lat).toFixed(1)+' м/с '+(lat>0?'вправо':'влево');
+ let fail='';
+ if(P.coll)fail='Столкновение с другим куполом: купола сложились.';
+ else if(P.st)fail='Срыв: купол потерял поток и сложился.';
+ else if(vs>3.6)fail='Жёсткий удар: вертикальная скорость слишком большая.';
+ else if(fwd<-1)fail='Несёт спиной вперёд: ноги не удержали, сел на пятую точку.';
+ else if(fwd>6.5)fail=ws>=2&&cosU<-.5?`Посадка по ветру: ${fwd.toFixed(1)} м/с по земле, кувырок.`:`Слишком быстро по земле (${fwd.toFixed(1)} м/с): кувырок.`;
+ else if(abs(lat)>2)fail=`Боковой снос ${lt}: ноги не успели, завал на бок.`;
+ else if(t>.4)fail='Касание в повороте: купол зацепил крылом.';
+ const pos=[P.x,P.y],inZone=inPoly(pos,ZG[C.zone]),inDanger=inPoly(pos,ZG.danger);
+ const hurt=!!(P.coll||P.st||vs>3.6||fwd>6.5),free=SV.mode==='free';
+ let grade=hurt?'ТРАВМА':fail?'ПАДЕНИЕ':d<=2?'ОТЛИЧНО':d<=C.R?'ХОРОШО':free?'ПОСАДКА':inZone?'В ЗОНЕ':'ВНЕ ЗОНЫ';
+ // как пилот встречает землю: пробежка, кувырок вперёд, на пятую точку, завал на бок
+ {const kind=fwd>6.5?'fallF':(P.st||vs>3.6||fwd<-1)?'sit':abs(lat)>2?'side':'run',g2=hypot(gx,gy)||1;
+  P.la={t:0,kind,hurt,ph:0,sp:kind==='sit'?min(1.5,g2*.3):kind==='fallF'?fwd*.6:max(0,fwd),dir:kind==='sit'?[gx/g2,gy/g2]:[cos(P.h),sin(P.h)],dec:kind==='run'?2.4:4.5,sg:lat>0?-1:1,bk:ws>1?[w.x/ws,w.y/ws]:[-cos(P.h),-sin(P.h)]}}
+ if(!fail&&inDanger){fail='Посадка в опасной зоне: ВПП и стоянка, приземляться запрещено.';grade='НАРУШЕНИЕ'}
+ else if(!fail&&inPoly(pos,ZG.nofly)&&!(C.zone==='hp'&&inZone)){fail='Посадка среди построек или в зоне высокоскоростных — туда садиться нельзя.';grade='НАРУШЕНИЕ'}
+ const tips=[];
+ if(P.fl===null&&vs>2.2)tips.push('Подрыва не было. На 2–3 м тяни обе клеванты до конца.');
+ else if(P.fl!==null&&P.fl>6)tips.push(`Подрыв рано, на ${P.fl.toFixed(1)} м. Купол погасил скорость в воздухе и провалился.`);
+ else if(P.fl!==null&&P.fl<1.2)tips.push('Подрыв поздно: купол не успел выйти в горизонт.');
+ else if(P.fl!==null)tips.push(`Подрыв вовремя, на ${P.fl.toFixed(1)} м.`);
+ if(P.gates){const ok=P.gates.filter(g=>g.st>0).length;tips.push(`Точки коробочки: ${ok} из 3 ближе 40 м (`+P.gates.map(g=>g.h+' м — '+(g.off!=null?Math.round(g.off)+' м'+(g.st>0?' ✓':''):'не дошёл')).join(', ')+').')}
+ if(P.lowT>.5)tips.push('Резкий поворот ниже 40 м. В повороте купол ныряет и теряет высоту.');
+ if((P.tuMax||0)>.25)tips.push(`Заход через болтанку за препятствием: при ветре ${ws.toFixed(1)} м/с за лесополосой или домом тянется ротор на 10–15 его высот по ветру. Заходи так, чтобы последние 50 м не проходили с подветренной стороны деревьев и построек.`);
+ if(P.flips>6)tips.push(`Много перекладок (${P.flips}). Решай раньше, корректируй меньше.`);
+ if(d>C.R&&ws>=1){const al=((P.x-TG[0])*w.x+(P.y-TG[1])*w.y)/ws;
+  tips.push(al>0?'Перелёт по ветру. Выходи на прямую ниже или тормози на прямой.':'Недолёт. Ветер съел скорость: держись ближе к цели с наветренной стороны.')}
+ if(abs(lat)>1.2)tips.push('Боковой ветер. После подрыва скорость вперёд гаснет, а снос остаётся. На последних 10–15 м доверни носом в ветер, даже ценой отхода от линии на цель.');
+ const ZN={student:'студенческой (зелёной)',main:'основной (жёлтой)',fast:'скоростной (красной)',hp:'высокоскоростной'}[C.zone];
+ if(!free&&!inZone&&!inDanger)tips.push(`Посадка вне ${ZN} зоны для твоего купола.`);
+ if(P.low.rwy)tips.push('Пересёк зону ВПП ниже 300 м — так нельзя.');if(P.low.nofly)tips.push('Пролетел ниже 300 м над постройками или зоной высокоскоростных — эта зона закрыта.');
+ if(!fail&&vs>2.5)tips.push('Касание жестковато, подрыв можно сделать глубже.');
+ SV.j++;if(!free&&!fail&&(SV.best[C.a]==null||d<SV.best[C.a]))SV.best[C.a]=Math.round(d*10)/10;save();
+ if(tg&&tg.HapticFeedback)tg.HapticFeedback.notificationOccurred(fail?'error':d<=C.R?'success':'warning');
+ $('grade').textContent=grade;$('grade').style.color=fail?'var(--bad)':d<=C.R?'var(--ok)':'var(--ink)';
+ $('why').textContent=fail||(d<=2?'Точно в ноль.':d<=C.R?`В круге ${C.R} м.`:`Безопасно, но за кругом ${C.R} м.`);
+ const f=[['До центра',d.toFixed(1)+' м'],['Вертикально',vs.toFixed(1)+' м/с'],['Вперёд',fwd.toFixed(1)+' м/с'],['Вбок',lt],['Направление',dir],['Ветер',ws.toFixed(1)+' м/с'],['Прыжок №',SV.j]];
+ $('facts').innerHTML=f.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
+ $('tips').innerHTML=tips.map(s=>`<li>${s}</li>`).join('');
+ P.la.show=hurt||fail?3.2:2.6;
+}
+
+// ---------- 3D: своя перспективная проекция ----------
+// Мир: x,y — земля (м), z — вверх. Камера сзади-сверху, смотрит по курсу.
+const cm={x:0,y:0,z:0,yaw:0,pit:.6,F:500,cx:0,cy:0,f:[0,0,0],r:[0,0,0],u:[0,0,0]},NR=.4;
+const SUN=[0,0,1],CLD=[0,0,0];
+// Погода: высота солнца (азимут постоянный — солнце на юго-западе, послеобеденное), цвета неба и дымки, облачность, сила солнца
+const WXS={
+ clear:{n:'Ясно',el:47,zc:[.26,.5,.84],hz:[.78,.85,.88],sc:[1,.95,.85],lc:[1,1,1],fd:[7500,2600],cv:.18,sk:1,tint:null},
+ cumulus:{n:'Облака',el:42,zc:[.3,.52,.8],hz:[.8,.85,.87],sc:[1,.96,.88],lc:[1,1,1],fd:[7000,2500],cv:.5,sk:1,tint:null},
+ evening:{n:'Вечер',el:13,az:atan2(-.42,-.91),zc:[.22,.36,.62],hz:[.84,.76,.7],sc:[1,.72,.45],lc:[1.02,.88,.74],fd:[8000,3000],cv:.28,sk:.9,tint:'rgba(255,140,60,.16)'},
+ overcast:{n:'Пасмурно',el:40,zc:[.6,.64,.69],hz:[.74,.76,.78],sc:[.9,.9,.9],lc:[.8,.82,.84],fd:[5000,1800],cv:1,sk:.15,tint:'rgba(95,105,118,.22)'}};
+let WX=WXS.clear;
+function setWx(k){WX=WXS[k]||WXS.clear;const e=WX.el*Math.PI/180,az=WX.az??atan2(.72,-.7);SUN[0]=cos(e)*cos(az);SUN[1]=cos(e)*sin(az);SUN[2]=sin(e);
+ document.body.style.background=`rgb(${WX.hz.map(v=>v*255|0)})`}
+function setCam(){
+ const cy=cos(cm.yaw),sy=sin(cm.yaw),cp=cos(cm.pit),sp=sin(cm.pit);
+ cm.f=[cy*cp,sy*cp,-sp];cm.r=[-sy,cy,0];cm.u=[cy*sp,sy*sp,cp];
+ const lo=cl((P.alt-1)/40,0,1),fz=P.alt+2.4-(1-lo)*.8,dist=8.5+13.5*lo; // у земли камера подходит к пилоту: смотришь на пятачок касания
+ cm.x=P.x-cm.f[0]*dist;cm.y=P.y-cm.f[1]*dist;cm.z=max(1.3,fz-cm.f[2]*dist);
+ cm.F=(H/2)/Math.tan(.6+(cm.fv||0));cm.cx=W/2;cm.cy=H*.42;
+}
+function tc(x,y,z){const a=x-cm.x,b=y-cm.y,c=z-cm.z;return[a*cm.r[0]+b*cm.r[1],a*cm.u[0]+b*cm.u[1]+c*cm.u[2],a*cm.f[0]+b*cm.f[1]+c*cm.f[2]]}
+const sc=p=>[cm.cx+p[0]/p[2]*cm.F,cm.cy-p[1]/p[2]*cm.F];
+function clipP(ps){const o=[];for(let i=0;i<ps.length;i++){const a=ps[i],b=ps[(i+1)%ps.length],ai=a[2]>=NR,bi=b[2]>=NR;if(ai)o.push(a);
+ if(ai!==bi){const t=(NR-a[2])/(b[2]-a[2]);o.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,NR])}}return o}
+function poly(ws,fill,stroke){const c=clipP(ws.map(p=>tc(p[0],p[1],p[2])));if(c.length<3)return;
+ X.beginPath();c.forEach((p,i)=>{const s=sc(p);i?X.lineTo(s[0],s[1]):X.moveTo(s[0],s[1])});X.closePath();
+ if(fill){X.fillStyle=fill;X.fill()}if(stroke){X.strokeStyle=stroke;X.stroke()}}
+function seg(a,b,wm,col){let p=tc(...a),q=tc(...b);if(p[2]<NR&&q[2]<NR)return;
+ if(p[2]<NR){const t=(NR-p[2])/(q[2]-p[2]);p=p.map((v,i)=>v+(q[i]-v)*t)}if(q[2]<NR){const t=(NR-q[2])/(p[2]-q[2]);q=q.map((v,i)=>v+(p[i]-v)*t)}
+ const s=sc(p),e=sc(q);X.lineWidth=max(1,wm*cm.F/((p[2]+q[2])/2));X.strokeStyle=col;X.beginPath();X.moveTo(s[0],s[1]);X.lineTo(e[0],e[1]);X.stroke()}
+const circ=(x,y,r,n=40,z=0)=>Array.from({length:n},(_,i)=>[x+cos(i/n*6.283)*r,y+sin(i/n*6.283)*r,z]);
+
+function hash(i,j){let h=i*374761393+j*668265263;h=(h^(h>>>13))*1274126177;return((h^(h>>>16))>>>0)/4294967296}
+const FIELDS=['#56733a','#5f7f3e','#6a8845','#4d6932','#7a8b47','#8a8a4e'].map(rgb),HAZE=rgb('#c3d5d6'),BASE=rgb('#3f5a2b');
+
+function drawWorld(){
+ X.setTransform(D,0,0,D,0,0);
+ if(GL){X.clearRect(0,0,W,H);drawGL()}else{
+ const hy=cm.cy-Math.tan(cm.pit)*cm.F;
+ if(hy>0){const g=X.createLinearGradient(0,0,0,hy);g.addColorStop(0,'#6fa6d6');g.addColorStop(1,'#cfe2e6');X.fillStyle=g;X.fillRect(0,0,W,hy+1)}
+ const g2=X.createLinearGradient(0,max(0,hy),0,H);g2.addColorStop(0,css(HAZE));g2.addColorStop(min(1,max(.05,(H*.25)/(H-hy))),css(mix(BASE,HAZE,.5)));g2.addColorStop(1,css(BASE));
+ X.fillStyle=g2;X.fillRect(0,max(0,hy),W,H);
+ // поля
+ const CS=90,RV=750,gi=Math.floor(cm.x/CS),gj=Math.floor(cm.y/CS),n=Math.ceil(RV/CS);
+ for(let i=gi-n;i<=gi+n;i++)for(let j=gj-n;j<=gj+n;j++){
+  const mx=i*CS+CS/2,my=j*CS+CS/2,d=hypot(mx-cm.x,my-cm.y,cm.z);if(d>RV+60)continue;
+  if(tc(mx,my,0)[2]<-CS)continue;
+  const r=hash(i,j),col=mix(FIELDS[(r*FIELDS.length)|0],HAZE,min(.85,(d/RV)**1.4*.85));
+  const a=i*CS+1.5,b=j*CS+1.5,e=CS-3;poly([[a,b,0],[a+e,b,0],[a+e,b+e,0],[a,b+e,0]],css(col));
+ }
+ const road='#9c9585';
+ poly([[cm.x-900,150,0],[cm.x+900,150,0],[cm.x+900,157,0],[cm.x-900,157,0]],road);
+ poly([[-160,-400,0],[-154,-400,0],[-154,150,0],[-160,150,0]],road);
+ poly(circ(0,0,70,48),'#86a257');box(-130,110,40,22,8,rgb('#b8b3a6'));}
+ // площадка приземления
+ poly(circ(TG[0],TG[1],GL?3.5:max(C.R,5)+2,48),GL?'rgba(216,196,154,.9)':'#d8c49a');
+ X.lineWidth=2;X.setLineDash([7,6]);poly(circ(TG[0],TG[1],C.R,56),null,'#ffffff');X.setLineDash([]);
+ poly(circ(TG[0],TG[1],2,24),'#ff7a1a');poly(circ(TG[0],TG[1],.4,10),'#ffffff');
+ if(!SCN){drawTraffic();drawTown();drawTrees()}
+ if(!SCN)BLD.filter(b=>hypot(b.cx-cm.x,b.cy-cm.y)<1500).sort((a,b)=>hypot(b.cx-cm.x,b.cy-cm.y)-hypot(a.cx-cm.x,a.cy-cm.y)).forEach(prism);
+ // колдун (ветроуказатель): мачта 8 м, конус 6 м в бело-оранжевую полоску, у верхнего угла светло-зелёного квадрата
+ if(!SCN){const B=[140-TGT[0],444-TGT[1]],H0=8,w=wind(0),ws=max(w.s,.3),ux=w.x/ws,uy=w.y/ws,px=-uy,py=ux,Lk=6,fill=cl(ws/7,0,1),droop=(1-fill)*4.5;
+  seg([B[0],B[1],0],[B[0],B[1],H0+.3],.18,'#e8e8e8');
+  for(let i=0;i<5;i++){const a0=i/5,a1=(i+1)/5,r0=.75-.4*a0,r1=.75-.4*a1,
+   P0=[B[0]+ux*Lk*a0*(.4+.6*fill),B[1]+uy*Lk*a0*(.4+.6*fill),H0-droop*a0*a0],P1=[B[0]+ux*Lk*a1*(.4+.6*fill),B[1]+uy*Lk*a1*(.4+.6*fill),H0-droop*a1*a1];
+   const col=i%2?'#f4f4f0':'#ff6a1a';
+   poly([[P0[0]+px*r0,P0[1]+py*r0,P0[2]],[P1[0]+px*r1,P1[1]+py*r1,P1[2]],[P1[0],P1[1],P1[2]+r1],[P0[0],P0[1],P0[2]+r0]],col,'rgba(0,0,0,.25)');
+   poly([[P0[0]-px*r0,P0[1]-py*r0,P0[2]],[P1[0]-px*r1,P1[1]-py*r1,P1[2]],[P1[0],P1[1],P1[2]+r1],[P0[0],P0[1],P0[2]+r0]],css(rgb(col),.85),'rgba(0,0,0,.25)');
+   poly([[P0[0]+px*r0,P0[1]+py*r0,P0[2]],[P1[0]+px*r1,P1[1]+py*r1,P1[2]],[P1[0],P1[1],P1[2]-r1],[P0[0],P0[1],P0[2]-r0]],css(rgb(col),.7),'rgba(0,0,0,.25)');
+   poly([[P0[0]-px*r0,P0[1]-py*r0,P0[2]],[P1[0]-px*r1,P1[1]-py*r1,P1[2]],[P1[0],P1[1],P1[2]-r1],[P0[0],P0[1],P0[2]-r0]],css(rgb(col),.6),'rgba(0,0,0,.25)')}}
+ // трава рядом: даёт ощущение скорости у земли
+ if(!SCN&&P.alt<45){X.fillStyle='rgba(28,48,14,.55)';const S=2.5,bx=Math.floor(P.x/S),by=Math.floor(P.y/S);
+  for(let i=bx-13;i<=bx+13;i++)for(let j=by-13;j<=by+13;j++){const h=hash(i,j),x=i*S+h*2,y=j*S+hash(j,i)*2;
+   if(hypot(x-TG[0],y-TG[1])<max(C.R,5)+2.5)continue;const p=tc(x,y,0);if(p[2]<1)continue;const s=sc(p),z=cl(.3*cm.F/p[2],1,7);X.fillRect(s[0]-z/2,s[1]-z/4,z,z/2)}}
+}
+// ---------- Карта: кадр GX016813 (1:29), Танай, выпрямлен из фишая. 1 px ≈ MPP м ----------
+// ---------- Карта Таная ----------
+// Дороги, лес, вода, посёлки, аэродром и постройки — OpenStreetMap (© участники OpenStreetMap, ODbL).
+// Поля и лесополосы — сетка, обведённая по кадрам GX016813: в OSM поля не размечены. Цвет полей взят с фото.
+const FARM={"U":[-7421,-6545,-5736,-4794,-3763,-2906,-1965,-1092,0,987,1890,2570,3582,4537,5449,6325,7152],"V":[-6598,-6436,-6283,-6053,-5827,-5660,-5481,-5279,-5061,-4864,-4678,-4518,-4364,-4150,-3905,-3667,-3498,-3322,-3153,-2994,-2755,-2360,-2138,-1978,-1760,-1541,-1348,-1193,-773,-647,-542,-437,-332,-227,-59,0,199,392,639,845,1041,1238,1461,1675,1844,2075,2308,2563,2799,2980,3165,3386,3607,3833,4078,4260,4513,4663,4821,5078,5331,5513,5678,5862,6016,6264,6486,6700],"C":["???????????????????????????????????????????????????????????????????","???????????????????????????????????????????????????????????????????","???????????????????????????????????????????????????????????????????","???????????????????????????????????????????????????????????????????","??????????????????????????????7757?????????????????????????????????","??????????????????????????7777777577???????775?????????????????????","????????5566655566404444300663366677777777775??????????????????????","?????66766666644444660110666663336666666772277772777777????????????","??0000663333333333300000000110100006666622727727727777?????????????","??????6003365644660006000006606000366011111772727277722????????????","????????????6006040066000006000000664112177127722772???????????????","?????????????????36500000001111010160117717222727??????????????????","???????????????????????10000000000006715701552?????????????????????","?????????????????????????????00000016355556????????????????????????","??????????????????????????????????????01???????????????????????????","???????????????????????????????????????????????????????????????????"],"PAL":["#d2b384","#9a6f55","#7b5c4a","#7f9d58","#a4b56c","#c4b088","#8c9a66","#ad9f7a"]};
+const rad=d=>d*Math.PI/180,dv=d=>[Math.cos(rad(d)),Math.sin(rad(d))],along=(p,d,t)=>[p[0]+d[0]*t,p[1]+d[1]*t];
+// Координаты OSM: метры от центра ВПП 08/26, x — восток, y — юг. Мишень (0,0) игры = TGT в OSM.
+const TGT=[77,573]; // синяя точка основной площадки (по снимку с дрона DJI_0672), в координатах OSM
+// Зоны приземления со схемы клуба (схема 1/2), привязаны к ортофото с дрона: пруд, ангар, стоянка, развилка
+const ZONES={"student":[[-383,230],[198,205],[256,243],[-49,654],[-380,284]],"main":[[-21,625],[255,245],[310,287],[30,666]],"fast":[[142,583],[206,503],[199,497],[135,577]],"hp":[[151,590],[215,510],[207,503],[143,583]],"pond":[[-223,563],[-186,519],[-117,573],[-152,617]],"circle":[[-30,537]],"nofly":[[38,716],[321,316],[434,397],[138,792]],"danger":[[-388,194],[-387,130],[489,71],[606,146],[333,544],[231,471],[347,302],[211,206],[-371,206]],"rwy":[[-382,190],[-379,155],[427,119],[427,156]]}; // hp — между оранжево-белым ограждением и жёлто-белыми флажками (фото дрона)
+const ZG={};for(const k in ZONES)ZG[k]=ZONES[k].map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+const POND=[[-201,548],[-180,534],[-138,590],[-159,603]].map(p=>[p[0]-TGT[0],p[1]-TGT[1]]),POND_B=[[-220,517],[-205,510],[-125,615],[-140,622]].map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+const MAINSQ=[[24,593],[138,430],[218,488],[98,650]].map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+let TG=[0,0];
+// ГЛК «Танай» по OSM (54.713, 85.061): вершина чуть южнее центра комплекса
+const HILL=[-3355-TGT[0],5327-TGT[1]+350];
+const OSM=`F-55,-3k -1,-5 5,-3 7,-9 5,-a v,-18 2,2 -9,e -2,-1 0,4 -2,1 0,3 -3,5 -k,t -7,6 0,3 -3,2 -2,2 -1,1|F-10,-1h 1,-2 1g,11 -1,2 -1g,-11|F-3g,13 6,8 2,-2 -6,-7 -2,1|F8,4o 3,2 9,-e -2,-2 -a,e|F-3x,l 2,-1 9,a 0,3 -6,-5 -5,-7|F-3f,-3b 2a,1o -2,2 -2a,-1n 2,-3|F-5f,-35 -2,-2 1,-3 4,-2 2,1 -1,3 -4,3|F-66,-25 -1,-3 f,-j 2,2 -d,i -3,2|C-cb,-d9 o,-d -8,-i -m,e 6,h|F-c7,-7m 3,-4 3x,4a -3,2 -3x,-48|F-7r,-3k 2,-1 b,b 2,-1 z,17 -2,2 -1c,-1i|L-f1,-no y,-1t 1j,-2k 1x,-3g 1,-m 4,-6 f,-8 v,-1k 3,-7 0,-6 -1,-3 -32,-5o -2,-1 -v0,be -1v,y 2c,22 t,h 10,h 16,f n,4 j,b 1c,e 1g,4 20,o y,g 20,1d 5f,3n 1f,m 4,-2 6,-2 8,0 6,-1 5,-2 a,-7 15,-c f,0 7,-4 24,-q h,-7 9,-2 9,-1 d,-a 8,-7 c,-g f,-s q,-1l z,-1s 5,0|F-cj,-97 6,-c h,-p 9,-b 8,-c 4,-3 -1,8 -15,1j -2,0|G-or,-gy 7,3 0,1 -1,1 -7,-3 0,-1 1,-1|G-cw,-9m 0,1 3,1 4,6 1,-1 2,-2 -2,-3 2,2 0,-2 -2,-3 -3,-1 -3,0 -2,2|G-d3,-9h 3,-2 -1,2 -2,1 0,-1|G-cv,-97 2,1 -1,1 -1,-2|G-d6,-9d 8,a 1,-2 0,-3 -3,-4 -2,-1 -4,0|I-dz,-9u p,q -r,u -u,-w o,-n 8,-1|Ylt,-ft -1a,l -6,1 -8,-25 13,-q 8,-1 9,1f 4,v|W-m8,t 2,-8 f,-1 0,-9 d,0 2,h q,1 c,j c,c a,1 4,-g d,2 2,f m,8 v,x 3,i -s,5 -k,-h -b,-g 0,-l -i,2 -a,h -9,-j -e,-i -c,-9 -2,j 4,a -b,1 -6,-g -f,-2 -5,-f -2,-b -8,-2|d-gr,s2 b,-4 n,-m|F-ks,wx 17,-r 2f,-2p b,-k 1,-k -1,-1 -3j,45 -e,g|F-lc,xi 6,-o k,-p 10,-1m o,-l j,-f v,-q 0,5 -x,14 -2c,2p -j,r|F-la,so -i,3e -6,6 -3,-7 0,-l 5,-r 4,-e 5,-10 9,-n 4,0|F-lo,vo f,-2y a,2 4,d 0,c -b,1g -5,b -8,2 0,8 -2,5 -3,1|S-5r,-2g e,g 6,0 3,-1 1,-3 -f,-g -3,-2 -6,6|r-kv,-95 g,-8 8,-3 c,-6 2,-5 5,0 3,-1 0,-9 -2,-3 1,-3 9,-3 2,-5 2,-1 7,-9 3,0 2,-3 0,-4 7,-2 1,-4 1,-2 3,0 3,5 3,-1 6,-5 a,-4 3,-4 b,-1 7,-8 i,-a 5,-4 6,-8 3,-2 4,1 5,4 4,0 2,-3 3,-b 0,-3 2,-5 4,-4 3,-7 2,-1 9,-1 9,4 4,-1 1,-3 -3,-b 1,-5 8,-6 b,-2 1,-2 -1,-6 -6,-9 -b,-7 -d,-7 -2,-4 1,-7 9,-b b,-4 n,0 a,-5 b,-1 2,-2 0,-2 -9,-d 0,-2 2,-3 2,-1 8,0 h,1 5,-2 4,-4 6,-b 5,-5 2,-3 0,-5 -3,-8 -3,-1 -6,0 -f,3 -2,-2 -2,-3 0,-8 4,-7 4,-c 1,-b 2,-8 5,-a 0,-4 -4,-e -2,-c -3,-6 -4,-4 -f,-3 -2,-2 1,-3 5,-4 0,-3 -2,-1 -5,-2 -5,-3 0,-3 2,-6 2,-a -3,-a -5,-7 -4,-4 -1,-3 2,-2 5,-1 0,-2 -a,-9 0,-2 2,-5 d,-b 1,-5 -2,-6 -1,-4 1,-1 d,-b 2,-4 0,-a -1,-5 -4,-4 -9,-5 -2,-6 2,-6 9,-c 1,-5 -1,-e 1,-5 3,-5 a,-9 3,0 7,6 3,-1 5,-5 2,-3 0,-k 1,-3 5,-4 -1,-3 -3,-4 0,-7 7,-6 2,-1 2,-3 3,-4 5,2 3,0 1,-2 0,-6 3,0 5,3 4,-8 9,-6 b,-a 1,-5 4,-4 6,-4 1,-2 0,-2 -3,-4 2,-8 -2,-3 1,-1 0,-2 4,0 2,-8 4,-1 2,1 4,4 1,0 3,-3 2,-3 3,-2 1,-3 -1,-2 -4,-3 0,-1 1,-2 b,1 2,-2 0,-1 -3,-1 0,-2 5,-3 7,0 1,-1 2,-6 -3,-2 -1,-7 7,-3 0,-1 -1,-2 2,-5 2,0 8,8 4,1 1,-3 6,-2 0,-2 4,-5 1,-5 2,0 7,5 3,0 2,-1 1,-3 0,-3 2,-2 -1,-2 3,-3 -1,-3 3,-2 2,-1 3,0 4,3 4,1 4,-1 2,-2 2,-6 0,-3 -6,-2 -3,-2 -1,-2 5,-6 7,-4 1,-1 0,-6 7,-6 -1,-4 -4,-2 0,-1 2,-4 4,-5 5,-8 -2,-5 -5,-6 -1,-5 -3,-6 0,-3 2,-2 3,-1 3,2 6,-2 4,2 2,0 7,-7 4,-2|W-9i,cr x,-h 3,-1 1,1 5,b -1,6 8,d -1l,z -i,-v -3,-9 1,-3 4,-2 9,0 2,3 2,0 b,-6|W-dw,-ef 0,3 8,8 3,0 4,-4 0,-2 -3,-4 -1,-1 0,2 -4,-2 -3,-9 -3,-4 -2,-2 -2,-3 -3,-2 -4,-1 -1,2 -3,2 -1,2 -2,-1 -2,2 -2,5 4,2 -1,1 -1,3 1,1 5,2 2,2 4,-1 2,0 3,-1 2,0|r-l5,-91 a,-4|W-k9,-b3 -5,0 -6,-1 -5,1 1,-5 i,-1 e,7 7,2 8,-2 1,2 -3,5 -1,1 -3,0 -d,-3 -8,-5 -5,-1|Fge,-gi -k,-e 0,-2 1,-2 2,-1 2,1 2y,25 a,7 4,-2 2,1 2,1 0,3 -5,5 -4,-1 -2s,-21|Fiw,-eh 6,1 2,2 -1,1 -4,4 -7,3 -5,0 -e,4 -4,-2 0,-2 0,-1 4,-4 d,-5 a,-1|sj4,105 -2,-f 7,-o -2,-4 5,-5 1,-8 5,-e 5,-3 6,2 2,-1 2,-4 -3,-5 0,-4 2,-9 7,0 3,-1 7,-7 -1,-3 -4,-4 -3,-a -7,-8 0,-6 5,-e -1,-4 2,-b -2,-f -2,-5 -2,-1 -6,4 -5,-a 1,-8 6,-7 2,-5 1,-4 -6,-5 8,-h 3,-3 a,-3 0,-3 -2,-a 1,-h -1,-6 -3,-3 -2,-4 2,-6 -1,-6 -4,-7 2,-4 5,-5 0,-5 2,-2 4,0 7,-3 4,2 4,3 4,1 2,0 2,-2 1,-4 -2,-8 1,-5 7,-8 0,-8 4,-6 -1,-2 -8,-2 -q,-i -5,-6 -6,-b -e,-d -4,-9 -6,-8 -4,-1 -3,0 -2,3 -5,-1 -b,-4 -6,-4 -e,-3 -d,-c -9,-5 -4,-4 -g,-7 -p,-8 -t,-r -l,-w -l,-j -1b,-i -r,-h -o,-18 -w,-t -1j,-t -15,-y -1i,-r -x,-7 -14,w -h,3 -v,-9 -j,a -1a,l -f,-1 -y,4 -l,b -14,-7 -12,-2 -q,-c -w,-c -1j,-g -h,-q -y,4 -15,1 -8,d -j,6 -9,-6 -g,3 -c,-4 -3,-a 3,-7 9,-8 -2,-7 7,-g 2,-8 -9,-13 -2,-a -7,-8 -c,-6 -h,-3 -9,-5 -i,6 -h,-5 -4,-5 -8,4 -f,a -a,-5 -8,-h -2,-8 -1,-e -9,-x -d,-c -b,-5 -m,-f -d,-n -d,-a -b,-g -7,-h -a,-8 -a,-7 -p,-m -a,-f -7,-d 9,-c n,-7 b,-f 0,-e 8,-8 -4,-b -e,-c -f,-2 -g,-g -8,-f -m,-2 -a,-l -7,3 -d,-2 -l,-5 -18,-l -5,-y a,-l|P-ob,-gs 65,2o|Ujq,-e0 -1r,-1b -21,-1f -3,-2 -3,1 -49,5t -1t,2m -5r,85 -3u,5b|P-cw,-8z l,o 2d,2i 9h,a8|P-12j,-nw s,8 f,4 15,4 f,2 1x,q x,e 3x,2l 37,27 l,b y,f|U-hv,qf -5,5 o,o|T2w,-1hk -3r,5o -39,4z -g,p -7g,df -2a,47 -9,q -b,1e -d,1c -q,20|U5,54 -5,5 -1b,1s -k,n -b,9 -4t,2y -30,1s|U-9z,cn -4,2|k-ft,ra -i,g|U-hg,r3 2,-3|k-fe,t2 0,-1c -3,-5 -7,-7 -8,-6 -o,-p -2,-1 -2,1 -f,f|k-gh,s3 7,4 5,4 k,m k,e 7,4 9,6 5,8 4,9 1,d -3,8 -2,2 -e,-2 -e,0 -3,1 -4,3|U-a3,cp -3z,2a -d,9 -6,5 -8,9 -5,9 -4,6 -4,e -2,e -1,p -1,1q -1,c -5,e -l,14 -4,b -2,c 0,2h 0,c -1,6 -5,8 -1i,1j|k-h3,pp -3,1|k-gn,qj 4,-5|k-gj,qk 0,-9 -j,-k -1,-2 0,-3|k-i0,qk -v,v -d,g 6,j 2,k 1,2 3,3|k-j8,rv -8,4 -e,1 -j,6 -e,3 -d,0 -4,3 -2,6|e-fl,-ek -4,9 -7,e -g,q -5,5 -f,8 -1o,r -n,9 -8,2 -k,8 -8,8|k-i4,-bg -u,d -4,3 -8,8 -p,s -4,c -2,3 -x,e|v1b,3i -6,-7 1,-4 c,-e 7,5|P10,5w q,h 97,5e l,b g5,7j i,9 o,d g,d d,c h,i 7,9 4w,7o|P-h,4f m,p g,g f,c|P-fz,-cw 5,4|P-fu,-cs l,n 1j,25 h,l d,g|P-i6,-e4 18,j m,e d,b|k-6b,-1v 7,-8 d,-i|kq6,cm n,-z r,-11 1e,-24 8,-8 b,-8 9,-5 g,-9 1h,-1d 13,-2v s,-1t 21,-2g h,-e 7,-3 z,-f n,1 14,5 4,1 5,4 6,5 5,8 3,8 a,10 v,2c i,1g 1,8 1,p -3,a -b,o -e,h -11,t -13,q -u,o -w,k -s,q -9,6 -f,8 -1w,1l -5,4 -6,a -8,7 -1f,13 -1k,13 -1d,w -1t,z -5,5 -6,f -5,7 -g,e -2,6 0,6 -8,4 -g,4 -2,1 -4,7|e-np,-f1 l,c 1u,z 16,q 7,9 i,z|T-fx,-j6 -l,1r -6,e -x,1j -l,1e|e-gi,-e7 -25,-12 -c,-8|e-fn,-eq -9,-9 -8,-5 -p,-a -c,-7 -a,-7 -4,-5 -c,-a -f,-a -n,-o|e-eg,-gm -b,-g -8,-8 -s,-n -7,-4 -d,-2|e-fl,-ek -2,-a 6,-e g,-k 4,-6 r,-13 3,-7 2,-9 2,-c 0,-7|e-fr,-gd -r,-s -5,-2 -8,-7 -m,-d -9,-a -6,-5 -7,-3|e-g4,-f4 h,-9 d,-4|e-i4,-gd -k,-5 -k,-1 -a,-4 -3,-3|e-la,-dq n,-t b,-j|e-jl,-gq 7,-2 h,-d g,-i e,-m|e-jj,-dd -1e,-s -2k,-1b|e-f9,-c5 a,-f 9,-9 d,-n c,-g 6,-2|e-jz,-cu 4,-4 c,-f d,-i -2,-9 7,-d|k-mt,-gk 5,-2 1d,-1 1b,-4 a,0 5,1|k-ln,-gn 1p,s z,e|e-n0,-g8 -p,17|k-uz,-kr r,k 1j,z 6,0 d,a 4r,5k 15,1b 5,9 13,2n o,1h 2,9 i,6c 1,s 2,3 2,5 4,3 d,7 4,6 6,3 a,2 l,9 2g,19|vu,46 -g,-d|e-jz,-bk -3,-1 -o,-o -p,-m -1s,-19 -1,-2 6,-a 1,-3 -3,-6|k-cy,-dx i,v 8,n 8,d 5,g a,b e,a 8,b 1c,10|k-cc,-c3 h,h|k-d4,-ai 9,-9 q,-j i,-l 6,-4 8,-3 r,0 5,-2 6,-6 4,-3 4,0 5,2 6,5 4,2 4,-1 4,-3 4,-5 1,-8 1,-u 1,-6 c,-p 2c,-3a|k-dh,-bx 8,-6 9,-4 7,0 5,0 e,5 11,0|k-d0,-e2 p,-5 8,-2 2l,-1b 15,-q j,-b 6,-2 d,-2 40,-5k|k-dz,-i0 -6,-i -4,-6 -3,-1 -7,-2 -a,-1 -14,-e|k-eg,-gm 4,5 a,t|k-lc,-hk 2h,-u 9,-4 w,-5 d,-4 m,-c a,-4 e,-1 6,2|k-g3,-j8 -1,-b 2,-25 4,-g 0,-7 -3,-6 -12,-r -7u,-5k -6,-7|k-pn,-1c9 q,25 o,1p 1y,5f 12,2s 13,3l m,1v 0,1 -3,2 -4b,1e -15,c -21,p -x,e -3,0 -1,-1 -3,-4 -18,-3h -v,-27 -1b,-3z -o,-1y -g,-1j -13,-3e -6,-v -2,-h -3,-6 -7,-6 -17,-7 -16,-1 -10,-6 -2m,-7 -19,-4 -9,0 -x,5 -e,5 -t,l -e,h -4,1 -3,-1 -2,-3 -1,-6|k-18t,-1bq 4,g 6,j 2,b -3,n -4,f 1,8 4,7 n,n h,g c,6 5,8 3,9 2,b q,3f 2a,6l 32,7z 2,3 3,1 6,0 9,-2 m,-9 1t,-n h,-7 7,-1 8e,61 3m,2m q,8 4,2 4,4 g,9|k-7r,-10g 3,5 16,20 5,a 1,c 2,4 9,8 j,j j,q a,b 16,14 j,f x,n x,p q,d v,q 9,5 7i,5d 4,1 2,1 2,3 1e,11 33,29 2o,1v 7,3 3,4 1,4|kqi,gi -3,-z -7,-l 0,-6 -2,-1a 0,-1j -2,-21 -9,-3k 3,-10 -2,-y -1,-1e -3,-t -2,-8 -7,-3o -8,-w 0,-7 0,-1k -p,-aw -6,-1g -2,-3 -1,-1 -4,-1 -3,0 -2f,o -6,4 -9,4 -7,8 -5,4 -f,8 -g,5 -7,1 -5,4 -i,7 -3,0 -e,-4 -2x,-24 -4,0 -4,3 -8,a|A!u,ow cy,-hy 4s,-7u -31,-24 -10z,2p ma,p7|N!-dx,10 ru,-20|N!-2u,am ho,-7y|B!5m,et v,-14 f,c -v,14 -f,-c|B!6k,d6 8,-a f,c -8,9 -f,-b|B!81,cj -c,-8 d,-k c,8 -d,k|p18,39 4,-5 3,3 -4,5 -3,-3|B!4d,hw 6,5 -5,7 -7,-5 6,-7|B!4n,hj 6,5 -5,7 -7,-5 6,-7|B!4w,h7 6,5 -5,7 -7,-5 6,-7|B!55,gv 7,5 -6,7 -6,-5 5,-7|B!3u,il a,-d 5,4 -9,d -6,-4|B!31,hy 9,-d 6,4 -a,d -5,-4|B!2e,ip 10,r a,-c -r,-j 1,-4 -5,-6 -6,2 -9,c|ou,39 3,-3 2,2 -3,3 -2,-2|X!ar,69 2e,-1a 1z,-1g 25,-2w 4,-f -5,-g -c,-d -i,-a -q,-5 -1r,0|X!bp,6y -9,-11 -10,-1a -2x,-2k -35,-2e|Z!ag,61 1m,16 -3g,4s -1m,-16 3g,-4s|B!7e,bx 4,-5 5,4 -4,5 -5,-4|p-ii,-d7 0,-2 3,-1 1,1 3,8 0,1 -4,1 -3,-8|p-je,-de 2,-2 6,9 -2,1 -6,-8`.split('|').map(s=>{const c=s[0];let r=s.slice(1),q=5;if(r[0]==='!'){q=1;r=r.slice(1)}let x=0,y=0;
+ return{c,p:r.split(' ').map(t=>{const[a,b]=t.split(',');x+=parseInt(a,36);y+=parseInt(b,36);return[x*q-TGT[0],y*q-TGT[1]]})}});
+// Сетка полей: шаг лесополос снят с фото (×1,63 — масштаб по ВПП 1000 м), направления — по лесополосам и дороге из OSM (36° и 126°), узел трасса/дорога = OSM (24,919)
+const FS=1.63,FR=rad(-4.3),FJ=[24-TGT[0],919-TGT[1]],FA=dv(27),FC=dv(121);
+const fp=(u,v)=>[FJ[0]+(FA[0]*u+FC[0]*v)*FS,FJ[1]+(FA[1]*u+FC[1]*v)*FS];
+const ph2w=(x,y)=>{x-=35;y-=299;return[FJ[0]+FS*(x*Math.cos(FR)-y*Math.sin(FR)),FJ[1]+FS*(x*Math.sin(FR)+y*Math.cos(FR))]};
+// Юг и юго-запад обведены по спутниковому снимку Sentinel-2 cloudless 2016 (EOX, CC BY 4.0): тайга, колки, покосы, поля за трассой
+const S2=a=>a.map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+const TAIGA=S2([[-6000,1700],[-4000,1800],[-3000,2000],[-2500,2350],[-2000,2700],[-1000,2780],[0,2650],[1000,2650],[1800,2750],[2400,3000],[2650,3600],[2350,4300],[2050,5200],[2600,6500],[-6000,6500]]);
+const COPSES=[[[-4000,450],[-3500,420],[-3300,800],[-3600,1150],[-4000,1100]],[[-2200,-200],[-1900,-250],[-1850,100],[-2150,150]],[[-3000,1100],[-2600,1050],[-2500,1500],[-2900,1600]],
+ [[-1500,1300],[-1150,1250],[-1100,1650],[-1450,1700]],[[-2400,1650],[-1900,1600],[-1800,2000],[-2300,2100]],[[4100,1200],[4700,1350],[4600,1700],[4050,1550]],[[3300,3600],[3900,3500],[4000,4100],[3400,4200]]].map(S2);
+const MEADF=[[[-900,1500],[400,1550],[1300,2050],[1100,2350],[-400,2250],[-1000,1900]],[[1500,2150],[2600,2300],[3000,2650],[2500,2850],[1600,2600]],
+ [[2900,2700],[3900,3000],[4600,3400],[4200,3600],[3200,3300]],[[3000,3300],[3700,3400],[3500,3900],[2900,3800]],[[-3200,-1300],[-2600,-1250],[-2500,-700],[-3100,-750]]].map(S2);
+const HWY=[[-6934,-4298],[-4374,-3021],[-3270,-2540],[-2940,-2374],[-2851,-2298],[-2468,-1799],[-2321,-1617],[-1792,-1047],[-86,797],[24,919],[178,1062],[1966,2116],[4977,3525],[5448,3897],[6328,5273]].map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+// Постройки клуба обведены по снимку с дрона DJI_0672 (ортофото 0,4 м/px): [x,y (OSM), длина, ширина, высота, угол, стены, крыша]
+const RD=-55;
+// Городок: координаты (t — вдоль ограждения площадки, n — поперёк, от ограждения к ул. Авиационной), в метрах.
+// Разметка — по 2ГИС, размеры и места — по ортофото дрона DJI_0672 (0,3 м/px)
+const TA=[152,591],TU=[.625,-.781],TN_=[.784,.627],UA=-51.3,TN=(t,n)=>[TA[0]+TU[0]*t+TN_[0]*n,TA[1]+TU[1]*t+TN_[1]*n];
+// Ниже 300 м нельзя над постройками и зоной высокоскоростных: граница вдоль линии флажков (n=−13) от стоянки самолётов до музея
+ZONES.nofly=[TN(145,-13),TN(-300,-13),TN(-300,150),TN(150,150)];ZG.nofly=ZONES.nofly.map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+const TOWN=[ // t,n,длина(вдоль),ширина,высота,стены,крыша,конёк — сверено с ортофото DJI_0672 и 2ГИС
+ [51,25,50,18,6,'#e9edf1','#6c7178',1.4],                                   // большой ангар (t 26–76, n 16–34)
+ [11,12,8,6,3.5,'#f2f1ec','#e6e4dc',0],                                      // белый павильон у детской площадки
+ [-78,16,13,11,7,'#2c2f35','#26292e',0],[-96,17,16,11,7,'#efe8da','#3a78c8',2.6], // чёрный дом, дом с синей крышей
+ [-128.5,35,17,48,10,'#f4f4f0','#8a9098',0],                                 // гостиница «Аэродром Танай»: основной корпус
+ [-131.5,65,15,10,5,'#e6e8ea','#7c8fa8',0],                                  // гостиница: корпус 2 (за основным)
+ [-41,51,10,12,5.5,'#efe6d2','#6b4a3a',2.8],[-54,51,10,12,5.5,'#efe6d2','#6b4a3a',2.8],[-66,51,10,12,5.5,'#efe6d2','#6b4a3a',2.8],[-79,51,10,12,5.5,'#efe6d2','#6b4a3a',2.8],[-91,51,10,12,5.5,'#efe6d2','#6b4a3a',2.8], // коттеджи
+ [-196,-73,14,10,4,'#efe6d6','#3a3032',3]];                                  // сарай в загоне
+const HOTEL_X=[ // полукруглый эркер и входная группа, купола на крыше
+ {p:Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i/9*Math.PI;return TN(-120+Math.cos(a)*6.5,25+Math.sin(a)*7)}),h:10,col:'#f4f4f0',roof:'#8a9098'},
+ {p:[TN(-144,33),TN(-141,31),TN(-137,31),TN(-137,40),TN(-141,40),TN(-144,38)],h:5,col:'#dfe3e6',roof:'#9aa3ab'}];
+const TOWN_BLD=TOWN.map(([t,n,l,w,h,col,roof,ridge])=>{const[x,y]=TN(t,n);return[x,y,l,w,h,UA,col,roof,ridge]});
+const BLD_RAW=[ // x,y,длина,ширина,высота карниза,угол,стены,крыша,конёк
+ [222,528,16,12,6,RD,'#e3e8ec','#3c8fd8',2.2],[258,497,22,16,7,RD+90,'#e6e9ec','#3a78c8',2.5],[243,488,6,6,3,RD,'#8a7e70','#5a4e44',1],
+ [274,536,10,8,5,RD,'#efe9dc','#6d8fb8',2.4],[268,556,12,9,5,RD,'#efe9dc','#5b8cc8',2.4],[278,546,8,8,4.5,RD,'#efe9dc','#8a5a40',2.2],[264,566,8,6,4.5,RD,'#efe9dc','#4f86c8',2],
+ [352,427,12,8,5,RD,'#e8eaec','#3f86c8',2],[380,386,14,7,5,RD,'#f0f1f2','#e3e6e8',1.5],[292,406,5,4,3,RD,'#8a7e70','#6a5a4a',1],
+ [128,762,4,4,3,RD,'#f4f4f0','#e0e0dc',0],[120,772,3,3,2.5,RD,'#f4f4f0','#e0e0dc',0]];
+const BLD=[...BLD_RAW,...TOWN_BLD].map(([x,y,l,w,h,an,col,roof,ridge])=>{const c=cos(rad(an)),s2=sin(rad(an)),X0=x-TGT[0],Y0=y-TGT[1];
+ const p=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>[X0+c*i*l/2-s2*j*w/2,Y0+s2*i*l/2+c*j*w/2]);return{p,h,col,roof,ridge,cx:X0,cy:Y0,tower:null}});
+for(const b of HOTEL_X){const p=b.p.map(v=>[v[0]-TGT[0],v[1]-TGT[1]]);BLD.push({...b,p,cx:p[0][0],cy:p[0][1]})}
+for(const[t,n]of[[-128,38],[-120,41]]){const c=TN(t,n),p=Array.from({length:12},(_,i)=>[c[0]-TGT[0]+Math.cos(i/12*6.283)*3.3,c[1]-TGT[1]+Math.sin(i/12*6.283)*3.3]);BLD.push({p,h:12,col:'#f4f4f0',roof:'#dfe3e8',cx:p[0][0],cy:p[0][1]})}
+// Дорожки, стоянка, пруды и ограды у клуба — тоже по ортофото
+const mvT=a=>a.map(p=>[p[0]-TGT[0],p[1]-TGT[1]]);
+const TQ=(t0,t1,n0,n1)=>mvT([TN(t0,n0),TN(t1,n0),TN(t1,n1),TN(t0,n1)]);
+const PATHS2=[[mvT([TN(-230,9.5),TN(100,6.5)]),3,'#b0705a'],   // кирпичная дорожка вдоль ограждения
+ [mvT([TN(-162,5),TN(-161,-20),TN(-161,-44),TN(-164,-54),TN(-176,-60),TN(-189,-69)]),3,'#c9bea2'], // тропинка от гостиницы к сараю: вдоль ряда елей, через ели у загона
+ ];
+const LOTS=[TQ(-173,-148,4,60),TQ(-112,80,36,48),TQ(-15,80,36,51),TQ(-29,-20,48,86),TQ(79,84,48,86),TQ(-156,-150,60,86)]; // стоянка у гостиницы; внутренняя улица с парковкой вдоль ангара
+const PLAY=TQ(-3,7,8,20);
+const POOLS=[[mvT(Array.from({length:16},(_,i)=>TN(-33+cos(i/16*6.283)*4.5,16+sin(i/16*6.283)*4.5)))],[TQ(-67,-56,12,15)]];
+const DECK=TQ(-40,-21,10,22),WORKOUT=TQ(-20,-10,8,22),DECK2=TQ(-70,-52,10,17);
+const FENCE=mvT([TN(-219,-79),TN(-183,-47),TN(-165,-68),TN(-200,-97)]);
+const MARK_DASH=mvT([[116,604],[216,472]]),MARK_LINE=mvT([[172,588],[216,512]]);
+// Спортивная площадка (корт с сеткой) и парковка у ангара — по фото DJI_0706–0708, DJI_0409
+const COURT=TQ(0,26,55,70); // корт — через внутреннюю дорогу от ангара, со стороны ул. Авиационной (2ГИС)
+const PARKED=[...Array(9)].map((_,i)=>{const[x,y]=TN(36+i*4.5,40);return[x-TGT[0],y-TGT[1],i]});
+const MUSEUM=mvT([[46,736],[82,748],[40,850],[-36,848],[-36,806]]);
+// Музей авиатехники под открытым небом — по ортофото DJI_0672 и снимкам DJI_0403/0695 (координаты OSM).
+// Две кирпичные дорожки от стоянки гостиницы: левая — прямо к стеле с истребителем, правая — через два круга к площадкам с техникой
+const MUSK=[-3.75,826],MUSQ=[[11,826,6],[-3.75,826,4],[1.25,839,4],[13.75,840,4]]; // центральная площадка и три квадрата
+const MUS=[ // тип, x, y, курс носа (°), цвет
+ ['heli8',51,752,200,'#4f6a3e'],['heli2',75,771,250,'#8d9496'],['heli2',34,782,160,'#5d7a45'],['heli2',51,794,110,'#6b7d5a'],
+ ['jet',51,774,225,'#9aa3a8'],['yak',22.5,792.5,300,'#f2f2ee','#c83a2e'],['yak',41.75,810,340,'#f2f2ee','#d23a2a'],
+ ['l410',10,812,110,'#f0f0ec','#2a2d33'],['an2',30,824,290,'#4e6a3e'],
+ ['btr',37,764,40,'#5c6b48'],['btr',64.5,784,30,'#6a7552'],['gun',-3.75,826,60,'#4b5a3e'],['t34',1.25,839,60,'#4e5c3c'],['kat',13.75,840,60,'#55633f']];
+const STELE=[-22,824],MUS_FIRS=[[-28,806],[-31,811],[-33,817],[-34,823],[-34,829],[-33,835],[-13,836],[-9,842],[-4,848],[4,850]];
+function MUS_PATHS(){const br='#c49482',ring=(c,r)=>mvT(Array.from({length:25},(_,i)=>[c[0]+cos(i/24*6.283)*r,c[1]+sin(i/24*6.283)*r])),
+  sq=(c,h,a)=>{const d=[cos(a),sin(a)],n=[-d[1],d[0]];return mvT([[1,1],[-1,1],[-1,-1],[1,-1],[1,1]].map(([u,v])=>[c[0]+(d[0]*u+n[0]*v)*h,c[1]+(d[1]*u+n[1]*v)*h]))},a=rad(-37);
+ return[[mvT([[48,738],[-12,813]]),3,br],[mvT([[68,744],[63.5,754.8]]),2.2,br],[ring([62,758],3.5),1.5,br],[mvT([[60,761],[56.5,765.5]]),2.2,br],[ring([51,774],9),2.4,br],
+  [mvT([[45.5,781],[15,821]]),2.4,br],...MUSQ.map(([x,y,h])=>[sq([x,y],h,a),2,br]),[mvT([[11,826],[-3.75,826]]),2,br],[mvT([[11,826],[13.75,840]]),2,br],[mvT([[-3.75,826],[1.25,839]]),2,br]]}
+PATHS2.push(...MUS_PATHS());
+const APRON=OSM.find(o=>o.c==='Z');
+// Поля у аэродрома обведены вручную по кадру 1:29 и перенесены в OSM (подобие по свуп-понду и развилке, сверено с ортофото дрона):
+// лесополосы, границы и цвет каждого поля. Дальше от кадра — сетка того же направления.
+// Поля и лесополосы — по спутниковому снимку Sentinel-2 cloudless 2022 (EOX, CC BY 4.0): лесополосы найдены автоматически
+// (тёмные линии, преобразование Хафа). Все они идут под 35,5° — перпендикулярно дороге вдоль аэродрома.
+// Сетка: t — вдоль лесополос, o — поперёк (метры, начало — центр ВПП в OSM). Дорога вдоль аэродрома — t≈555, полевая дорога — t≈-1140.
+const GU=dv(35.5),GN=[-GU[1],GU[0]],GP=(t,o)=>[t*GU[0]+o*GN[0]-TGT[0],t*GU[1]+o*GN[1]-TGT[1]];
+const BO=[-4100,-3500,-2900,-2290,-1670,-1375,-1052,-435,-118];           // лесополосы (смещение o)
+const BELT_T={'-4100':[[-2800,-1150],[-1130,540],[570,4200]],'-3500':[[-2800,-1150],[-1130,540],[570,4200]],'-2900':[[-2800,-1150],[-1130,540],[570,4200]],
+ '-2290':[[-1130,540],[570,1400]],'-1670':[[-1130,540],[570,1800]],'-1375':[[-1130,540],[570,2600]],'-1052':[[-2800,-1150],[-1130,540],[570,4200]],
+ '-435':[[-2800,-1150],[-1130,540],[570,4200]],'-118':[[-2800,-1150],[-1130,365],[570,4200]]}; // -118: обрывается перед ВПП, от ВПП до дороги деревьев нет
+const GEAST={'-118':'#c9a36c','-435':'#8f935f','-1052':'#9ea56c','-1375':'#cdb07a','-1670':'#c7b98e','-2290':'#b7a878','-2900':'#9a9a6a'};
+const GWEST={'-118':'#9c9a6a','-435':'#a3a878','-1052':'#8f9463','-1375':'#9c9a6a','-1670':'#c7ad85','-2290':'#b4a57c','-2900':'#a8a070'};
+const GPAL=['#d2b384','#9a6f55','#8c9a66','#ad9f7a','#a4b56c','#c4b088','#7f9d58','#b9a276'];
+const FPOLY=[],PBELT=[],PROAD=[];
+{const OB=[-4700,...BO];
+ const strip=(o0,o1,t0,t1,col)=>FPOLY.push([col,[GP(t0,o0),GP(t1,o0),GP(t1,o1),GP(t0,o1)]]);
+ for(let i=0;i<OB.length-1;i++){const o0=OB[i],o1=OB[i+1],k=String(o1);
+  strip(o0,o1,570,4200,GEAST[k]||GPAL[(hash(i,3)*8)|0]);                 // к востоку от дороги
+  strip(o0,o1,-1130,540,GWEST[k]||GPAL[(hash(i,5)*8)|0]);                // между полевой дорогой и дорогой вдоль аэродрома
+  strip(o0,o1,-2800,-1150,GPAL[(hash(i,7)*8)|0])}                        // западнее полевой дороги
+ strip(-118,900,570,4200,GEAST['-118']);                                 // большое поле у трассы (до трассы; за ней — луга)
+ strip(-118,900,-2800,540,'#8fa062');                                    // трава вокруг аэродрома
+ for(const o of BO)for(const[t0,t1]of BELT_T[o])PBELT.push([GP(t0,o),GP(t1,o)]);
+ PBELT.push([GP(-1140,-1670),GP(-1140,-140)]);                          // лесополоса вдоль полевой дороги
+ PROAD.push([GP(-1152,-4700),GP(-1152,900)]);PROAD.push([GP(-2810,-4700),GP(-2810,900)]);}
+const beltLike=o=>{const a=o.p[0],b=o.p.reduce((m,q)=>hypot(q[0]-a[0],q[1]-a[1])>hypot(m[0]-a[0],m[1]-a[1])?q:m,a),an=Math.abs(((atan2(b[1]-a[1],b[0]-a[0])*57.3-35.5)%180+180)%180);return an<6||an>174};
+const PCOV=[GP(-2800,-4700),GP(4200,-4700),GP(4200,900),GP(-2800,900)];
+const inPoly=(pt,pl)=>{let c=false;for(let i=0,j=pl.length-1;i<pl.length;j=i++){const a=pl[i],b=pl[j];if((a[1]>pt[1])!==(b[1]>pt[1])&&pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c};
+
+// Самолёты на стоянке и в музее под открытым небом (по ортофото)
+const PLANES=[[324,365,-120,'#f4f4f0'],[280,425,-110,'#f4f4f0'],[254,459,-100,'#f4f4f0'],[310,474,-110,'#f4f4f0'],[310,382,-110,'#3f6b4a'],[264,440,-110,'#3f6b4a']].map(p=>[p[0]-TGT[0],p[1]-TGT[1],p[2],p[3]]);
+function paintMap(size,span,det){
+ const cv=document.createElement('canvas');cv.width=cv.height=size;const g=cv.getContext('2d'),k=size/span;
+ g.setTransform(k,0,0,k,size/2,size/2);g.lineJoin=g.lineCap='round';
+ const path=pts=>{g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]))};
+ const P=(pts,fill)=>{path(pts);g.closePath();g.fillStyle=fill;g.fill()};
+ const Lp=(pts,w,col)=>{path(pts);g.lineWidth=max(w,1.1/k);g.strokeStyle=col;g.stroke()};
+ const L=(a,b,w,col)=>Lp([a,b],w,col);
+ g.fillStyle='#a19f74';g.fillRect(-span,-span,2*span,2*span);
+ // поля и лесополосы по Sentinel-2
+ for(const[c,q]of FPOLY)P(q,c);
+ if(det)for(const[c,q]of FPOLY){g.save();path(q);g.clip();g.globalAlpha=.07;g.strokeStyle=c>'#b'?'#fff':'#000';g.lineWidth=1.4;g.beginPath();
+  const c0=q[0];for(let t=-3000;t<3000;t+=5){const o=along(c0,GN,t);g.moveTo(...along(o,GU,-5000));g.lineTo(...along(o,GU,5000))}g.stroke();g.restore()}
+ for(const r of PROAD){Lp(r,7,'#9c8f72');Lp(r,4.5,'#bcae8c')}
+ for(const b of PBELT)Lp(b,12,'#4b5a36');
+ // за трассой к юго-западу: луга с кустами и тайга (контур тайги — с фото)
+ const sw=[...HWY,[HWY[HWY.length-1][0]-6000,HWY[HWY.length-1][1]+9000],[HWY[0][0]-9000,HWY[0][1]+6000]];
+ P(sw,'#8e9c6b');
+ g.save();path(sw);g.clip();for(let n=0;n<700;n++){const x=(hash(n,3)-.5)*12000,y=(hash(5,n)-.5)*12000;
+  g.beginPath();g.arc(x,y,15+hash(n,n)*55,0,7);g.fillStyle=hash(n,9)>.5?'#6f7f4f':'#7c8a58';g.fill()}g.restore();
+ for(const m of MEADF){P(m,'#aab27a');g.save();path(m);g.clip();g.globalAlpha=.08;for(let t=-3000;t<3000;t+=6)L([t,-3000],[t+900,3000],2,'#fff');g.restore()}
+ const wood=(pl,n0,sp)=>{g.save();P(pl,'#4d5e3b');g.clip();let bx=[1e9,1e9,-1e9,-1e9];for(const p of pl){bx=[min(bx[0],p[0]),min(bx[1],p[1]),max(bx[2],p[0]),max(bx[3],p[1])]}
+  const n=min(2500,((bx[2]-bx[0])*(bx[3]-bx[1])/sp)|0);for(let i=0;i<n;i++){g.beginPath();g.arc(bx[0]+hash(i,n0)*(bx[2]-bx[0]),bx[1]+hash(n0,i)*(bx[3]-bx[1]),18+hash(i,n0+1)*55,0,7);
+  g.fillStyle=['#44563a','#56673f','#3d4d34','#4f6238'][i%4];g.fill()}g.restore()};
+ wood(TAIGA,11,9000);COPSES.forEach((c,i)=>wood(c,40+i,2500));
+ // гора покрыта лесом, на северном склоне — горнолыжные трассы
+ wood(Array.from({length:24},(_,i)=>[HILL[0]+cos(i/24*6.283)*1900,HILL[1]+sin(i/24*6.283)*1450]),70,2500);
+ {g.save();for(let i=0;i<6;i++){const x0=HILL[0]-420+i*170+hash(i,61)*60,top=[x0+(hash(61,i)-.5)*120,HILL[1]-150],bot=[x0+(hash(i,62)-.5)*260,HILL[1]-1350-hash(62,i)*300];Lp([top,bot],38+hash(i,63)*20,'#9fb87a')}
+  P([[HILL[0]-260,HILL[1]-1500],[HILL[0]+320,HILL[1]-1500],[HILL[0]+300,HILL[1]-1420],[HILL[0]-240,HILL[1]-1420]],'#c9c4b6');g.restore()}
+ // площади из OSM
+ const AREA={L:'#b5a47a',G:'#94a86a',S:'#7a8a55',C:'#8a9470',Y:'#a39a86',I:'#a09c95',Q:'#bfae90',R:'#b3b09e',W:'#6f9bb6',F:'#4a5b37',p:'#86a15a',o:'#5aa6d6'};
+ for(const o of OSM)if(AREA[o.c]&&o.c!=='F'&&o.c!=='W')P(o.p,AREA[o.c]);
+ for(const o of OSM)if(o.c==='R'){g.save();path(o.p);g.clip();for(let n=0;n<220;n++){const b=o.p[0],x=b[0]+(hash(n,31)-.5)*900,y=b[1]+(hash(32,n)-.5)*900;
+  g.fillStyle=['#9b5b4a','#6d7682','#c9c1b3','#4f6d8f'][n%4];g.fillRect(x,y,9,8)}g.restore()}
+ for(const o of OSM)if(o.c==='F'&&!beltLike(o)){P(o.p,AREA.F);g.save();path(o.p);g.clip();for(let n=0;n<60;n++){const b=o.p[(n*7)%o.p.length];g.beginPath();g.arc(b[0]+(hash(n,41)-.5)*60,b[1]+(hash(42,n)-.5)*60,8+hash(n,43)*14,0,7);g.fillStyle=n%2?'#3d4d30':'#5a6b40';g.fill()}g.restore()}
+ for(const o of OSM)if(o.c==='W')P(o.p,AREA.W);
+ for(const o of OSM)if(o.c==='r'||o.c==='s'||o.c==='d')Lp(o.p,o.c==='r'?9:o.c==='s'?5:3,'#6f9bb6');
+ // аэродром
+ for(const o of OSM)if(o.c==='A')P(o.p,'#86a15a');
+ if(det){const a=OSM.find(o=>o.c==='A');g.save();path(a.p);g.clip();g.globalAlpha=.05;for(let t=-1500;t<1500;t+=12)L([t,-1500],[t+400,1500],6,(t/12|0)%2?'#fff':'#1d2a10');g.restore()}
+ {const R4=ZG.rwy,m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];Lp([m(R4[0],R4[1]),m(R4[2],R4[3])],40,'#a8b97c')}
+ P(MAINSQ,'rgba(190,205,140,.55)');P(POND_B,'#b09a78');P(POND,'#3d9cc4');Lp([...POND,POND[0]],1.5,'#e8f4f8');
+ {const Z=(k,col,w,dash)=>{g.save();if(dash)g.setLineDash(dash);Lp([...ZG[k],ZG[k][0]],w,col);g.restore()};
+  Z('danger','rgba(150,60,170,.85)',.9);Z('rwy','rgba(255,255,255,.85)',.8);Z('student','rgba(80,220,90,.9)',.9);Z('main','rgba(240,220,40,.9)',.9);
+  Z('fast','rgba(230,50,40,.9)',.8);Z('hp','rgba(40,40,40,.85)',.8);Z('nofly','rgba(150,60,170,.85)',.9);
+  g.beginPath();g.arc(...ZG.circle[0],12,0,7);g.lineWidth=.8;g.strokeStyle='rgba(80,220,90,.95)';g.stroke()}
+
+
+ // бассейн и площадки из OSM у клуба смещены — рисуем свои, по снимку дрона и 2ГИС
+ // дороги: трасса с лесополосами по обе стороны
+ const RW={P:[10,'#8f8c86'],T:[7,'#b8ad95'],U:[6,'#bbb09a'],e:[5,'#c1b8a6'],v:[4,'#c1b8a6'],k:[3,'#b5a383']};
+ for(const o of OSM)if(o.c==='P')Lp(o.p,44,'#4a5933');
+ for(const o of OSM)if(o.c==='U'&&o.p.length>6)Lp(o.p,28,'rgba(74,89,51,.9)');
+ const TC0=TN(-60,30),TC=[TC0[0]-TGT[0],TC0[1]-TGT[1]],inTown=o=>(o.c==='v'||o.c==='k'||o.c==='e')&&o.p.some(p=>hypot(p[0]-TC[0],p[1]-TC[1])<170); // внутри городка — своя разметка по 2ГИС
+ for(const c of 'kvetUP')for(const o of OSM)if(o.c===c&&!inTown(o)){Lp(o.p,RW[c][0]+2,'rgba(60,55,45,.5)');Lp(o.p,RW[c][0],RW[c][1])}
+ if(det)for(const o of OSM)if(o.c==='P')Lp(o.p,.6,'#f2efe6');
+ // крыши и самолёты
+ P(MUSEUM,'#7fa35a');P(mvT([[-12,810],[-4,816],[-22,840],[-30,834]]),'#c9c6bd');P(mvT([[-16,806],[-7,812],[-13,820],[-22,814]]),'#c49482');P(DECK,'#9aa0a8');P(DECK2,'#8f6f58');P(WORKOUT,'#5a4a44');P(PLAY,'#b0624e');P(COURT,'#8a3a32');Lp([...COURT,COURT[0]],.5,'#e8e8e8');Lp([COURT[0].map((v,i)=>(v+COURT[1][i])/2),COURT[2].map((v,i)=>(v+COURT[3][i])/2)],.3,'#e8e8e8');for(const l of LOTS)P(l,'#a9a7a1');for(const[q,w,c]of PATHS2)Lp(q,w,c);for(const[q]of POOLS)P(q,'#3fc0d8');
+ Lp([...FENCE,FENCE[0]],.6,'#3a3a3a');g.save();g.setLineDash([3,4]);Lp(MARK_DASH,1.2,'#ffffff');g.restore();
+ for(const b of BLD)P(b.p,b.roof);
+
+ return cv;
+}
+// Маска покрова для шейдера земли и травинок (охват как у детальной карты): R — высокая трава, G — скошенная, B — поле с посевом, чёрное — дороги, лес, вода, постройки.
+// Скошено: светло-зелёный прямоугольник, скоростная и высокоскоростная зоны, ВПП, музейный газон; остальная трава аэродрома — высокая
+function paintMask(size,span){const cv=document.createElement('canvas');cv.width=cv.height=size;const g=cv.getContext('2d'),k=size/span;
+ g.setTransform(k,0,0,k,size/2,size/2);g.lineJoin=g.lineCap='round';g.fillStyle='#000';g.fillRect(-span,-span,2*span,2*span);
+ const path=pts=>{g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]))},P=(pts,c)=>{path(pts);g.closePath();g.fillStyle=c;g.fill()},Lp=(pts,w,c)=>{path(pts);g.lineWidth=w;g.strokeStyle=c;g.stroke()};
+ for(const[c,q]of FPOLY)P(q,c==='#8fa062'?'#f00':'#00f');
+ for(const o of OSM)if(o.c==='A'||o.c==='G'||o.c==='p')P(o.p,'#f00');
+ for(const m of MEADF)P(m,'#f00');for(const o of OSM)if(o.c==='L')P(o.p,'#00f');
+ P(MAINSQ,'#0f0');P(ZG.hp,'#0f0');P(ZG.fast,'#0f0');P(MUSEUM,'#0f0');
+ {const R4=ZG.rwy,m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];Lp([m(R4[0],R4[1]),m(R4[2],R4[3])],40,'#0f0')}
+ for(const o of OSM)if(o.c==='F'&&!beltLike(o)||o.c==='W'||o.c==='Z'||o.c==='R'||o.c==='I')P(o.p,'#000');
+ for(const b of PBELT)Lp(b,12,'#000');for(const r of PROAD)Lp(r,7,'#000');
+ const RW={P:14,T:9,U:8,e:6,v:5,k:4};for(const o of OSM)if(RW[o.c])Lp(o.p,RW[o.c],'#000');
+ P(POND_B,'#000');for(const l of LOTS)P(l,'#000');for(const b of BLD)P(b.p,'#000');for(const[q,w]of PATHS2)Lp(q,w+.6,'#000');for(const[q]of POOLS)P(q,'#000');
+ return cv}
+let MASK=null;const MAP={S:1600,S2:12000};
+let GL=null;
+(function(){try{
+ const gl=$('g').getContext('webgl',{antialias:true});if(!gl)return;
+ const sh=(t,src)=>{const o=gl.createShader(t);gl.shaderSource(o,src);gl.compileShader(o);return o},pr=gl.createProgram();
+ gl.attachShader(pr,sh(gl.VERTEX_SHADER,'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}'));
+ gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,`precision highp float;uniform vec3 C,F,Rr,U,HC,SD,ZC,HZ,SC,LC;uniform vec2 K,FD,DR;uniform float Fo,S,S2,CV,SK;uniform sampler2D T,T2,MK,MK2;uniform float TM,DRY,FM,PL;uniform vec3 WD,GT,FC;
+uniform vec4 SH[6];uniform vec3 SZ[6];uniform vec3 LO,LX,LY,LZ;uniform vec2 LS;uniform float SE;uniform sampler2D SM;
+float up4(vec4 c){return dot(c,vec4(1.,1./255.,1./65025.,1./16581375.));}
+// тени домов и деревьев (карта глубины из направления солнца, 4 выборки)
+float shad(vec3 p){if(SE<.5)return 1.;vec3 q=p+vec3(0.,0.,.2)-LO;vec3 l=vec3(dot(q,LX),dot(q,LY),dot(q,LZ));vec2 uv=l.xy/LS.x*.5+.5;
+ if(uv.x<.01||uv.y<.01||uv.x>.99||uv.y>.99)return 1.;float z=l.z/LS.y-.00025,s=0.;
+ for(int i=0;i<4;i++){vec2 o=vec2(i==1||i==3?1.:-1.,i>=2?1.:-1.)*.5/2048.;s+=z>up4(texture2D(SM,uv+o))?0.:1.;}
+ float e=max(abs(uv.x-.5),abs(uv.y-.5));return mix(s*.25,1.,smoothstep(.42,.49,e));}
+// Рельеф: гора ГЛК «Танай» (~300 м) и пологий залесённый кряж южнее; остальное — плоская степь
+float Hh(vec2 p){vec2 q=(p-HC.xy)/vec2(1500.,1100.);float h=HC.z*exp(-dot(q,q));
+ float ry=exp(-pow((p.y-HC.y-1800.)/1600.,2.))*(110.+60.*sin(p.x/1300.)+40.*sin(p.x/530.+1.));return h+ry*smoothstep(-1500.,1500.,p.y-HC.y+900.);}
+vec3 ground(vec2 w,float t){vec2 u1=w/S+.5,e=min(u1,1.-u1);
+ return mix(texture2D(T2,w/S2+.5).rgb,texture2D(T,u1).rgb,smoothstep(0.,.08,min(e.x,e.y)));}
+float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1.,0.)),f.x),mix(h2(i+vec2(0.,1.)),h2(i+1.),f.x),f.y);}
+// Трава и поля вблизи: по маске покрова. Высокая — пятнами, с метёлками и волнами от ветра; скошенная — полосами от косилки; поля — цвет сезона
+vec3 detail(vec2 w,float t,vec3 c){vec2 u1=w/S+.5,e=min(u1,1.-u1);vec3 m=mix(texture2D(MK2,w/S2+.5).rgb,texture2D(MK,u1).rgb,smoothstep(0.,.08,min(e.x,e.y)));
+ float s=m.r+m.g+m.b;if(s<.03)return c;float k=1.-smoothstep(220.,900.,t),k2=1.-smoothstep(500.,1600.,t);
+ float n1=vn(w*.11),n2=vn(w*.8+3.1),n3=vn(w*3.7+7.),n4=vn(w/60.);vec3 g=c*GT;
+ vec3 tall=g*vec3(.92,.98,.88)*(.9+.12*n1+.08*n4)*mix(1.,.9+.2*n3,k);
+ tall=mix(tall,vec3(.68,.62,.40)*(.75+.3*n2),smoothstep(.5,.9,n2)*(.12+.4*DRY)*k2);tall=mix(tall,tall*vec3(1.12,1.06,.9),DRY*smoothstep(.55,.8,n4));
+ float st=smoothstep(.35,.65,abs(fract(dot(w,vec2(.819,.573))/7.)*2.-1.)),a=.035*(1.-smoothstep(120.,500.,t));
+ vec3 mow=g*vec3(1.02,1.04,1.)*mix(1.+a,1.-a,st)*(.96+.08*n3*k)*mix(1.,1.06+.06*n1,DRY);
+ vec3 fc=mix(FC,vec3(.42,.34,.26),PL*step(.5,vn(w/380.+2.)))*(.86+.24*n1)*(.94+.1*n3*k);
+ vec3 fld=mix(c,fc*(.8+.4*dot(c,vec3(.6))),FM)*(.97+.06*step(.5,fract(dot(w,vec2(.581,.814))/1.6))*k);
+ return (tall*m.r+mow*m.g+fld*m.b+c*max(0.,1.-s))/max(1.,s);}
+float fbm(vec2 p,int o){float s=0.,a=.5;for(int i=0;i<5;i++){if(i>=o)break;s+=a*vn(p);p=p*2.03+vec2(17.3,9.1);a*=.5;}return s;}
+// Облака: слой кучевых на 1800 м, плывут по ветру. Плотность 0..1
+const float CB=1800.;
+float cloud(vec2 p,int o){float n=fbm((p+DR)/1500.,o),th=mix(.72,.28,CV);return smoothstep(th,th+.16,n);}
+// Дымка: к солнцу теплее и светлее
+vec3 fogc(vec3 d){return mix(HZ,SC,pow(max(dot(d,SD),0.),6.)*.45);}
+// Освещение земли: общий свет, тени облаков, мягкие тени куполов и пилотов (полутень растёт с высотой — угловой размер солнца 0,53°)
+vec3 lit(vec3 p3,vec3 c){vec2 w=p3.xy;
+ float cs=cloud(w+SD.xy/SD.z*CB,3);c*=LC*(1.-.42*SK*cs)*(1.-.45*SK*(1.-shad(p3)));
+ float sh=0.;
+ for(int i=0;i<6;i++){vec4 s=SH[i];if(s.w<-.5)continue;vec3 z=SZ[i];
+  float ac=s.w+1.5+z.z;vec2 fw=vec2(cos(s.z),sin(s.z)),q=w-(s.xy-SD.xy/SD.z*ac);q=vec2(dot(q,fw),dot(q,vec2(-fw.y,fw.x)));
+  q.x+=q.y*q.y/z.x*.12;
+  vec2 hb=vec2(z.y,z.x);float r=z.y*.8;vec2 e=abs(q)-hb+r;float sd=length(max(e,0.))+min(max(e.x,e.y),0.)-r,bl=.12+ac*.0093;
+  sh=max(sh,.62*exp(-ac/900.)*(1.-smoothstep(-bl,bl,sd)));
+  vec2 f0=s.xy-SD.xy/SD.z*s.w,f1=s.xy-SD.xy/SD.z*(s.w+1.8),pa=w-f0,ba=f1-f0;float hh=clamp(dot(pa,ba)/max(dot(ba,ba),1e-4),0.,1.);
+  float dp=length(pa-ba*hh),bp=.05+s.w*.0093;sh=max(sh,.62*exp(-s.w/900.)*(1.-smoothstep(.22-bp,.22+bp,dp)));}
+ return c*(1.-sh*SK);}
+vec3 sky(vec3 d){float mu=max(dot(d,SD),0.);
+ vec3 c=mix(HZ,ZC,pow(clamp(d.z,0.,1.),.55));
+ c+=SC*(pow(mu,8.)*.22+pow(mu,90.)*.35)*SK;
+ float sun=smoothstep(.99965,.99985,mu)*SK;
+ if(d.z>.004){float t=(CB-C.z)/d.z;vec2 p=C.xy+d.xy*t;float dn=cloud(p,5);
+  if(dn>0.){float n2=cloud(p+SD.xy*260.,4),li=clamp(.75+(dn-n2)*1.6,.2,1.);
+   vec3 cc=mix(mix(vec3(.52,.56,.64),HZ*.8,.4),SC*1.02,li*mix(1.,.35,1.-SK));cc+=SC*pow(mu,6.)*.25*(1.-dn)*SK;
+   float fa=exp(-t/60000.)*smoothstep(.004,.06,d.z);cc=mix(cc,HZ,1.-exp(-t/28000.));c=mix(c,cc,dn*fa);sun*=1.-dn*fa;}}
+ return c+vec3(1.,.95,.85)*sun*2.;}
+void main(){vec3 d=normalize(F+Rr*(gl_FragCoord.x-K.x)/Fo+U*(gl_FragCoord.y-K.y)/Fo),hz=fogc(d);
+ float tg=d.z<-.0008?-C.z/d.z:60000.;
+ float t=max(0.,(C.z-520.)/max(-d.z,1e-4));if(d.z>=0.)t=0.;bool hit=false;vec3 p;
+ for(int i=0;i<110;i++){if(t>tg||t>22000.)break;p=C+d*t;float h=Hh(p.xy);if(p.z<h){hit=true;break;}t+=clamp((p.z-h)*.6/max(-d.z,.03),6.,450.);}
+ if(hit){float a=t-12.,b=t;for(int j=0;j<5;j++){float m=(a+b)*.5;vec3 q=C+d*m;if(q.z<Hh(q.xy))b=m;else a=m;}t=b;p=C+d*t;
+  float e=8.;vec3 n=normalize(vec3(-(Hh(p.xy+vec2(e,0.))-Hh(p.xy-vec2(e,0.)))/(2.*e),-(Hh(p.xy+vec2(0.,e))-Hh(p.xy-vec2(0.,e)))/(2.*e),1.));
+  vec3 c=lit(p,detail(p.xy,t,ground(p.xy,t)))*(.55+.6*max(0.,dot(n,SD))*mix(.4,1.,SK))/(.55+.6*SD.z*mix(.4,1.,SK));
+  gl_FragColor=vec4(mix(c,hz,(1.-exp(-t/FD.x))*.8),1.);return;}
+ if(d.z>-.0008){gl_FragColor=vec4(sky(d),1.);return;}
+ vec2 w=C.xy+d.xy*tg;gl_FragColor=vec4(mix(lit(vec3(w,0.),detail(w,tg,ground(w,tg))),hz,(1.-exp(-tg/FD.y))*.92),1.);}`));
+ gl.bindAttribLocation(pr,0,'p');gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS))return;gl.useProgram(pr);
+ const fb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,fb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+ const a=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);
+ const u={};['C','F','Rr','U','K','Fo','S','S2','T','T2','HC','SD','ZC','HZ','SC','LC','FD','DR','CV','SK','SH','SZ','LO','LX','LY','LZ','LS','SE','SM','MK','MK2','TM','DRY','FM','PL','WD','GT','FC'].forEach(n=>u[n]=gl.getUniformLocation(pr,n));
+ const up=(cvs,unit)=>{gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,gl.createTexture());gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,cvs);
+  gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const an=gl.getExtension('EXT_texture_filter_anisotropic');if(an)gl.texParameterf(gl.TEXTURE_2D,an.TEXTURE_MAX_ANISOTROPY_EXT,min(8,gl.getParameter(an.MAX_TEXTURE_MAX_ANISOTROPY_EXT)))};
+ up(paintMap(2048,MAP.S,true),0);up(paintMap(2048,MAP.S2,false),1);
+ {const mk=paintMask(1024,MAP.S);up(mk,3);up(paintMask(1024,MAP.S2),4);MASK={n:1024,k:1024/MAP.S,d:mk.getContext('2d').getImageData(0,0,1024,1024).data}}
+ gl.uniform1i(u.MK,3);gl.uniform1i(u.MK2,4);
+ gl.uniform1i(u.T,0);gl.uniform1i(u.T2,1);gl.uniform1f(u.S,MAP.S);gl.uniform1f(u.S2,MAP.S2);gl.uniform3f(u.HC,HILL[0],HILL[1],300);GL={gl,u,pr,fb};
+}catch(e){console.error(e)}})();
+function drawGL(){const{gl,u}=GL;if(!SCN&&!GL.noScn){sceneInit();if(!SCN)GL.noScn=1}
+ if(SCN&&SCN.treesDirty){SCN.treesDirty=0;for(const t of SCN.trees){gl.deleteBuffer(t.vb);gl.deleteBuffer(t.ib)}SCN.trees=treeCells(SCN.up)}
+ let dynB=null,canB=null;if(SCN){dynB=dynM();canB=canopiesM();gl.bindBuffer(gl.ARRAY_BUFFER,SCN.dyn.vb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(dynB.v),gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER,SCN.can.vb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(canB.v),gl.DYNAMIC_DRAW);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,null);gl.activeTexture(gl.TEXTURE0);shadowPass(dynB)}
+ gl.viewport(0,0,W*D,H*D);gl.useProgram(GL.pr);gl.bindBuffer(gl.ARRAY_BUFFER,GL.fb);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+ gl.uniform3f(u.C,cm.x,cm.y,cm.z);gl.uniform3fv(u.F,cm.f);gl.uniform3fv(u.Rr,cm.r);gl.uniform3fv(u.U,cm.u);
+ gl.uniform2f(u.K,cm.cx*D,(H-cm.cy)*D);gl.uniform1f(u.Fo,cm.F*D);
+ const w=WX;gl.uniform3fv(u.SD,SUN);gl.uniform3fv(u.ZC,w.zc);gl.uniform3fv(u.HZ,w.hz);gl.uniform3fv(u.SC,w.sc);gl.uniform3fv(u.LC,w.lc);
+ gl.uniform2fv(u.FD,w.fd);gl.uniform1f(u.CV,w.cv);gl.uniform1f(u.SK,w.sk);
+ {const g0=wind(1);gl.uniform1f(u.TM,performance.now()/1000%1000);gl.uniform3f(u.WD,g0.x/max(g0.s,.1),g0.y/max(g0.s,.1),cl(g0.s/9,0,1));gl.uniform3fv(u.GT,SEA.gt);gl.uniform1f(u.DRY,SEA.dry);gl.uniform3fv(u.FC,SEA.fc);gl.uniform1f(u.FM,SEA.fm);gl.uniform1f(u.PL,SEA.pl)}
+ const wd=wind(1500);CLD[0]-=wd.x*.6*(time-CLD[2]);CLD[1]-=wd.y*.6*(time-CLD[2]);CLD[2]=time;gl.uniform2f(u.DR,CLD[0],CLD[1]);
+ // тени: свой купол + ближайшие купола в воздухе (до 6)
+ const L=[P,...BOTS.filter(b=>b.on&&mode!=='brief')].map(b=>({b,d:hypot(b.x-cm.x,b.y-cm.y)})).sort((a,b)=>a.d-b.d).slice(0,6),sh=new Float32Array(24).fill(-1),sz=new Float32Array(18);
+ L.forEach(({b},i)=>{const c=b===P?C:b.C,A=c.a*.0929,sp=Math.sqrt(A*2.3),ch=A/sp,Ln=sp*.82;sh.set([b.x,b.y,b.h,b.alt],i*4);sz.set([Ln*sin(.62),ch*.5,Ln],i*3)});
+ gl.uniform4fv(u.SH,sh);gl.uniform3fv(u.SZ,sz);GL.sh=sh;GL.sz=sz;if(SCN)setShadowU(u);else gl.uniform1f(u.SE,0);
+ gl.drawArrays(gl.TRIANGLES,0,3);if(SCN){drawScene(dynB,canB);drawGrass()}}
+// ---------- WebGL: объекты сцены (дома, машины, самолёты, колдун, стрела, деревья, купола, пилоты) ----------
+// Данные те же, что и раньше (TOWN, BLD, PLANES, TREES…); здесь заготовки, из которых видеокарта строит 3D:
+// призма-дом, коробка, конус, трубка, шар, дерево, купол. Перекрытие — буфер глубины, свет и тени — от солнца погоды.
+// Вершина: x,y,z, нормаль, цвет, материал (0 — обычный, 1 — ткань купола: просвечивает на солнце, 2 — стропы: без освещения, 3 — пилот)
+const VS=10,hex3=h=>rgb(h).map(v=>v/255),sh3=(c,k)=>c.map(v=>min(1,v*k));
+let MAT=0;
+function MB(){return{v:[],i:[]}}
+function vtx(B,p,n,c){B.v.push(p[0],p[1],p[2],n[0],n[1],n[2],c[0],c[1],c[2],MAT)}
+function nrm3(a,b,c){const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=hypot(...n)||1;return n.map(x=>x/l)}
+function triM(B,a,b,c,col,n){n=n||nrm3(a,b,c);vtx(B,a,n,col);vtx(B,b,n,col);vtx(B,c,n,col)}
+function quadM(B,a,b,c,d,col,n){n=n||nrm3(a,b,c);triM(B,a,b,c,col,n);triM(B,a,c,d,col,n)}
+const V3a=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],V3s=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],V3k=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],
+ V3c=(u,v)=>[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],V3n=a=>{const l=hypot(...a)||1;return[a[0]/l,a[1]/l,a[2]/l]},V3m=(a,b,t=.5)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+// треугольники простого многоугольника (обрезка «ушей») — для крыш сложной формы и стрелы
+function earcut2(P){const n=P.length,idx=[...Array(n).keys()],out=[];let A=0;for(let i=0;i<n;i++){const q=P[(i+1)%n];A+=P[i][0]*q[1]-q[0]*P[i][1]}const s=A>0?1:-1;
+ const cr=(a,b,c)=>((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]))*s,inT=(p,a,b,c)=>cr(a,b,p)>=0&&cr(b,c,p)>=0&&cr(c,a,p)>=0;
+ let g=0;while(idx.length>3&&g++<400){let cut=false;for(let k=0;k<idx.length;k++){const i0=idx[(k+idx.length-1)%idx.length],i1=idx[k],i2=idx[(k+1)%idx.length];
+  if(cr(P[i0],P[i1],P[i2])<=1e-9)continue;let ok=true;for(const j of idx){if(j===i0||j===i1||j===i2)continue;if(inT(P[j],P[i0],P[i1],P[i2])){ok=false;break}}
+  if(ok){out.push([i0,i1,i2]);idx.splice(k,1);cut=true;break}}if(!cut)break}
+ if(idx.length===3)out.push(idx.slice());return out}
+// дом: b.p — контур на земле, b.h — высота стен, b.ridge — высота конька (двускатная крыша, только для 4 углов), b.z0 — высота основания
+function prismM(B,b){const n=b.p.length,z0=b.z0||0,c=typeof b.col==='string'?hex3(b.col):b.col,rc=b.roof?hex3(b.roof):c;
+ let A=0;for(let i=0;i<n;i++){const q=b.p[(i+1)%n];A+=b.p[i][0]*q[1]-q[0]*b.p[i][1]}const sg=A>0?1:-1;
+ const Bt=b.p.map(p=>[p[0],p[1],z0]),T=b.p.map(p=>[p[0],p[1],z0+b.h]),ctr=b.p.reduce((s,p)=>[s[0]+p[0]/n,s[1]+p[1]/n],[0,0]);
+ for(let i=0;i<n;i++){const j=(i+1)%n,a=b.p[i],q=b.p[j],nx=(q[1]-a[1])*sg,ny=-(q[0]-a[0])*sg,l=hypot(nx,ny)||1;quadM(B,Bt[i],Bt[j],T[j],T[i],c,[nx/l,ny/l,0])}
+ if(b.ridge&&n===4){const m=(u,v)=>[(u[0]+v[0])/2,(u[1]+v[1])/2,z0+b.h+b.ridge],R0=m(T[0],T[3]),R1=m(T[1],T[2]);
+  const out=(nn,p)=>(nn[0]*(p[0]-ctr[0])+nn[1]*(p[1]-ctr[1])<0?nn.map(x=>-x):nn),up=v=>v[2]<0?v.map(x=>-x):v;
+  triM(B,T[0],T[3],R0,c,out(nrm3(T[0],T[3],R0),R0));triM(B,T[1],T[2],R1,c,out(nrm3(T[1],T[2],R1),R1));
+  quadM(B,T[0],T[1],R1,R0,rc,up(nrm3(T[0],T[1],R1)));quadM(B,T[3],T[2],R1,R0,rc,up(nrm3(T[3],T[2],R1)))}
+ else for(const[i,j,k]of earcut2(b.p))triM(B,T[i],T[j],T[k],rc,[0,0,1])}
+// коробка: центр (x,y), направление d («вперёд»), пределы вдоль/поперёк, от z0 до z1
+function boxM(B,x,y,d,l0,l1,w0,w1,z0,z1,col,roof){const n=[-d[1],d[0]],P=(a,b)=>[x+d[0]*a+n[0]*b,y+d[1]*a+n[1]*b];
+ prismM(B,{p:[P(l0,w0),P(l1,w0),P(l1,w1),P(l0,w1)],h:z1-z0,z0,col,roof})}
+// конус/цилиндр со сглаженными нормалями (ели, мачты)
+function coneM(B,x,y,z0,z1,r0,r1,sgm,c0,c1){const k=(r0-r1)/(z1-z0);
+ for(let i=0;i<sgm;i++){const a=i/sgm*6.283,b=(i+1)/sgm*6.283,ca=cos(a),sa=sin(a),cb=cos(b),sb=sin(b),l=Math.sqrt(1+k*k);
+  const na=[ca/l,sa/l,k/l],nb=[cb/l,sb/l,k/l];
+  const A0=[x+ca*r0,y+sa*r0,z0],B0=[x+cb*r0,y+sb*r0,z0],A1=[x+ca*r1,y+sa*r1,z1],B1=[x+cb*r1,y+sb*r1,z1];
+  vtx(B,A0,na,c0);vtx(B,B0,nb,c0);vtx(B,B1,nb,c1);vtx(B,A0,na,c0);vtx(B,B1,nb,c1);vtx(B,A1,na,c1)}}
+// трубка между точками a и b (руки, ноги, туловище пилота, свободные концы)
+function tubeM(B,a,b,r,col,sg=5){const d=V3n(V3s(b,a)),t=V3n(abs(d[2])<.9?V3c(d,[0,0,1]):V3c(d,[1,0,0])),s=V3c(d,t);
+ for(let i=0;i<sg;i++){const q0=i/sg*6.283,q1=(i+1)/sg*6.283,n0=V3a(V3k(t,cos(q0)),V3k(s,sin(q0))),n1=V3a(V3k(t,cos(q1)),V3k(s,sin(q1)));
+  const A0=V3a(a,V3k(n0,r)),A1=V3a(a,V3k(n1,r)),B0=V3a(b,V3k(n0,r)),B1=V3a(b,V3k(n1,r));
+  vtx(B,A0,n0,col);vtx(B,A1,n1,col);vtx(B,B1,n1,col);vtx(B,A0,n0,col);vtx(B,B1,n1,col);vtx(B,B0,n0,col)}}
+function sphereM(B,c,r,col){const S=8,Rg=5,pt=(i,j)=>{const th=j/Rg*Math.PI,ph=i/S*6.283;return[sin(th)*cos(ph),sin(th)*sin(ph),cos(th)]};
+ for(let i=0;i<S;i++)for(let j=0;j<Rg;j++){const a=pt(i,j),b=pt(i+1,j),d=pt(i,j+1),e=pt(i+1,j+1),P=n=>V3a(c,V3k(n,r)),cc=n=>sh3(col,.85+.25*n[2]);
+  vtx(B,P(a),a,cc(a));vtx(B,P(d),d,cc(d));vtx(B,P(e),e,cc(e));vtx(B,P(a),a,cc(a));vtx(B,P(e),e,cc(e));vtx(B,P(b),b,cc(b))}}
+// стропа: тонкая лента, развёрнутая к камере, не тоньше ~1 пикселя
+function lineM(B,a,b,wm,col){const m=V3m(a,b),v=V3s([cm.x,cm.y,cm.z],m),dist=hypot(...v),s=V3n(V3c(V3s(b,a),v)),w=max(wm,.6*dist/cm.F)/2,o=V3k(s,w),n=V3k(v,1/(dist||1));
+ const k=MAT;MAT=2;quadM(B,V3s(a,o),V3a(a,o),V3a(b,o),V3s(b,o),col,n);MAT=k}
+// дерево: ствол и крона-эллипсоид (14 вершин), индексированная сетка — тысячи деревьев одним вызовом на клетку карты
+let TREE_C=[hex3('#5e7a34'),hex3('#4a6230')],TREE_HI=[hex3('#8fae4e'),hex3('#789a48')];const TRUNK=hex3('#4a3d2c');
+function treeM(B,t){const[x,y,cz,r,k]=t,rz=r*1.25,base=B.v.length/VS,ci=k>.55?0:1,c0=sh3(TREE_C[ci],.72+.2*hash(x|0,y|0)),c1=TREE_HI[ci];
+ const pt=(dx,dy,dz,c)=>{const n=V3n([dx/(r*r),dy/(r*r),dz/(rz*rz)]);vtx(B,[x+dx,y+dy,cz+dz],n,c)};
+ const rot=hash(y|0,x|0)*6.283;
+ pt(0,0,-rz*.95,sh3(c0,.8));
+ for(let i=0;i<6;i++){const a=rot+i/6*6.283;pt(cos(a)*r*.92,sin(a)*r*.92,-rz*.35,c0)}
+ for(let i=0;i<6;i++){const a=rot+(i+.5)/6*6.283;pt(cos(a)*r*.86,sin(a)*r*.86,rz*.35,[0,1,2].map(j=>c0[j]*.55+c1[j]*.45))}
+ pt(0,0,rz,c1);
+ const I=B.i;for(let i=0;i<6;i++){const a=1+i,b=1+(i+1)%6,c=7+i,d=7+(i+1)%6;I.push(base,b+base,a+base, a+base,b+base,c+base, b+base,d+base,c+base, c+base,d+base,13+base)}
+ const tb=B.v.length/VS,tr=.18+r*.03;for(let i=0;i<3;i++){const a=rot+i/3*6.283,n=[cos(a),sin(a),0];vtx(B,[x+n[0]*tr,y+n[1]*tr,0],n,TRUNK);vtx(B,[x+n[0]*tr*.7,y+n[1]*tr*.7,cz-rz*.5],n,TRUNK)}
+ for(let i=0;i<3;i++){const a=tb+i*2,b=tb+((i+1)%3)*2;I.push(a,b,a+1, b,b+1,a+1)}}
+// машина: кузов и кабина (у грузовика — фургон), d — направление
+function carM(B,x,y,d,col,tr){const c=hex3(col);
+ if(tr){boxM(B,x,y,d,1.2,4.6,-1.25,1.25,.4,2.6,c);boxM(B,x,y,d,-4.6,1.1,-1.25,1.25,.4,3.2,hex3('#d8d8d2'))}
+ else{boxM(B,x,y,d,-2.25,2.25,-.9,.9,.25,.9,c);boxM(B,x,y,d,-1.3,1,-.82,.82,.9,1.45,sh3(c,.85))}}
+// самолёт на стоянке: фюзеляж, крыло, стабилизатор, киль, стойки (размеры как на карте)
+function planeM(B,p){const[x,y,ang,col]=p,a=rad(ang),c=hex3(col),dk=hex3('#2a2a2a');
+ const W2=(lx0,lx1,ly0,ly1,z0,z1,cc)=>{const r=[cos(a),sin(a)],f=[-sin(a),cos(a)],P=(lx,ly)=>[x+r[0]*lx+f[0]*ly,y+r[1]*lx+f[1]*ly];prismM(B,{p:[P(lx0,ly0),P(lx1,ly0),P(lx1,ly1),P(lx0,ly1)],h:z1-z0,z0,col:cc})};
+ W2(-.55,.75,-6,6,.7,1.9,c);W2(-7,7,-2.2,.4,1.45,1.62,c);W2(-2.5,2.5,4,5.3,1.8,1.9,c);W2(.02,.22,4.2,6,1.9,3.2,c);
+ W2(-.5,.7,-6.4,-6,.9,1.7,dk);W2(-1.6,-1.4,-2,-1.6,0,.9,dk);W2(1.6,1.8,-2,-1.6,0,.9,dk)}
+// городок: пилястры, баннер, будка, беседка, палатки, скамейки, крыльцо, ограждение из мешков, флажки, ели, сетка корта
+function townM(B){
+ for(let i=-4;i<=4;i++)for(const n of[15.9,34.1])prismM(B,{p:rectTN(51+i*6,n,1.4,.5),h:6.1,col:'#1f5fbf'});
+ prismM(B,{p:rectTN(35,56,12,.4),h:3.2,col:'#2f6fb0'});
+ prismM(B,{p:rectTN(-33,55,3,3),h:3,col:'#e6dcc6',roof:'#7a5a3a',ridge:1.2});
+ prismM(B,{p:rectTN(47,56,3.5,3.5),h:2.4,col:'#5a3a2a',roof:'#4a2f22',ridge:1.4});
+ prismM(B,{p:rectTN(60,61,4,3),h:1.8,col:'#4f6b4a',roof:'#3f5a3a',ridge:1});prismM(B,{p:rectTN(66,61,4,3),h:1.8,col:'#9a9a8a',roof:'#e8e2d6',ridge:1});
+ for(let t=20;t<=76;t+=6)if(t<43||t>55)prismM(B,{p:rectTN(t,10,1.6,.5),h:.5,col:'#b8bcc2'});
+ {const q=[[45,16],[53,16],[53,10.5],[45,10.5]].map(([t,n])=>{const v=TT(t,n);return[v[0],v[1],n>13?3.6:3.1]}),pc=hex3('#cfd4da'),rc=sh3(hex3('#2f7fd0'),.9);
+  for(const v of q)coneM(B,v[0],v[1],0,v[2],.08,.08,6,pc,pc);quadM(B,q[0],q[1],q[2],q[3],rc);const qb=q.map(v=>[v[0],v[1],v[2]-.12]);quadM(B,qb[3],qb[2],qb[1],qb[0],rc)}
+ for(let t=0,k=0;t<102;t+=1.7,k++)prismM(B,{p:rectTN(t,1,1.6,.7),h:.45,col:k%2?'#f2f2ee':'#e8633a'});
+ for(let i=0;i<=8;i++){const f=TT(-5+i*12,-12),pc=hex3('#dddddd'),fc=hex3(i%2?'#f4f4ee':'#f2c83a');coneM(B,f[0],f[1],0,1.8,.03,.03,4,pc,pc);
+  const a=[f[0],f[1],1.8],b=[f[0]+.7,f[1]+.2,1.6],c=[f[0],f[1],1.4];triM(B,a,b,c,fc);triM(B,c,b,a,fc)}
+ for(const[t,n]of FIRS){const b=TT(t,n);coneM(B,b[0],b[1],0,.8,.2,.2,4,TRUNK,TRUNK);coneM(B,b[0],b[1],.6,9,2.4,.05,8,hex3('#2c4529'),hex3('#46663c'))}
+ const C4=COURT,pc=hex3('#333333');for(let i=0;i<4;i++){const a=C4[i],b=C4[(i+1)%4];coneM(B,a[0],a[1],0,3.5,.05,.05,4,pc,pc);
+  const d=[b[0]-a[0],b[1]-a[1]],l=hypot(...d);boxM(B,a[0],a[1],[d[0]/l,d[1]/l],0,l,-.03,.03,3.42,3.5,pc)}}
+// подвижные предметы: машины, надувная стрела (против ветра у земли), колдун — пересобираются каждый кадр
+function dynM(){const B=MB();
+ if(!PATHS){const u=OSM.filter(o=>o.c==='U').map(o=>mkPath(o.p)).sort((a,b)=>b.T-a.T)[0];PATHS=[mkPath(HWY),u];
+  CARS=[...Array(40)].map((_,i)=>({pa:i<37?0:1,s0:hash(i,77)*30000,v:(i<37?19:9)+hash(77,i)*10,dir:i%2?1:-1,col:['#c8ccd2','#2f3640','#a3262a','#e9e9e4','#3b5b8a','#6b6f45'][i%6],tr:i%5===0}))}
+ const T=performance.now()/1000;
+ for(const c of CARS){const pa=PATHS[c.pa],o=onPath(pa,c.s0+c.dir*c.v*T),d=[o.d[0]*c.dir,o.d[1]*c.dir],rt=[-d[1],d[0]],p=[o.p[0]+rt[0]*2.6,o.p[1]+rt[1]*2.6];
+  if(hypot(p[0]-cm.x,p[1]-cm.y)>2500)continue;carM(B,p[0],p[1],d,c.col,c.tr)}
+ {const A=[190-TGT[0],420-TGT[1]],dl=[-cos(wa),-sin(wa)],nl=[-dl[1],dl[0]],k=1.4;
+  prismM(B,{p:[[-9,-1.2],[3,-1.2],[3,-3.2],[9.5,0],[3,3.2],[3,1.2],[-9,1.2]].map(([a,b])=>[A[0]+dl[0]*a*k+nl[0]*b*k,A[1]+dl[1]*a*k+nl[1]*b*k]),h:1.2,col:'#f4f4f2'})}
+ {const Bw=[140-TGT[0],444-TGT[1]],H0=10,w=wind(0),ws=max(w.s,.3),ux=w.x/ws,uy=w.y/ws,px=-uy,py=ux,Lk=8,fill=cl(ws/7,0,1),droop=(1-fill)*6,mc=hex3('#e8e8e8');
+  coneM(B,Bw[0],Bw[1],0,H0+.4,.12,.08,6,mc,mc);
+  const ring=a=>{const r=1-.5*a,s=Lk*a*(.4+.6*fill),c=[Bw[0]+ux*s,Bw[1]+uy*s,H0-droop*a*a];return[0,1,2,3,4,5,6,7].map(i=>{const q=i/8*6.283;return[c[0]+px*cos(q)*r,c[1]+py*cos(q)*r,c[2]+sin(q)*r]})};
+  for(let i=0;i<5;i++){const R0=ring(i/5),R1=ring((i+1)/5),col=hex3(i%2?'#f4f4f0':'#ff6a1a');
+   for(let j=0;j<8;j++){const k=(j+1)%8;quadM(B,R0[j],R0[k],R1[k],R1[j],col)}}}
+ lifeDynM(B);return B}
+// коробка с произвольной ориентацией: центр c, оси ex,ey,ez (единичные), полуразмеры a,b,h
+function obox(B,c,ex,ey,ez,a,b,h,col){const P=(i,j,k)=>V3a(c,V3a(V3k(ex,a*i),V3a(V3k(ey,b*j),V3k(ez,h*k))));
+ const f=[[[1,-1,-1],[1,1,-1],[1,1,1],[1,-1,1],ex],[[-1,1,-1],[-1,-1,-1],[-1,-1,1],[-1,1,1],V3k(ex,-1)],[[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],ey],[[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1],V3k(ey,-1)],
+  [[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,1],ez],[[-1,-1,-1],[-1,1,-1],[1,1,-1],[1,-1,-1],V3k(ez,-1)]];
+ for(const q of f)quadM(B,P(...q[0]),P(...q[1]),P(...q[2]),P(...q[3]),col,q[4])}
+// Парашютист: суставы в теле (f — вперёд, r — вправо, u — вверх), поза задаётся набором суставов и поворотом всего тела.
+// Позы: висит в подвесной системе, стоит, бежит, падает вперёд, садится на пятую точку, валится на бок
+function pilotJ(pose,o){const L=o.L||0,Rr=o.R||0,J={};
+ const set=(k,f,r,u)=>J[k]=[f,r,u];
+ if(pose==='hang'){const pr=o.prep||0,fl=o.fl||0;
+  set('hip',.08,0,.92);set('chest',0,0,1.36);set('head',.02,0,1.72);set('shL',0,-.21,1.44);set('shR',0,.21,1.44);
+  set('knL',.25+.1*pr+.25*fl,-.11,.47+.3*fl);set('knR',.25+.1*pr+.25*fl,.11,.47+.3*fl);set('anL',.15+.35*pr+.5*fl,-.13+.05*pr,.1+.1*fl);set('anR',.15+.35*pr+.5*fl,.13-.05*pr,.1+.1*fl);
+  set('elL',.06,-.37,1.72-L*.5);set('elR',.06,.37,1.72-Rr*.5);set('hdL',-.04,-.32,2.15-L*1.15);set('hdR',-.04,.32,2.15-Rr*1.15)}
+ else if(pose==='sit'){set('hip',-.1,0,.16);set('chest',-.38,0,.58);set('head',-.5,0,.88);set('shL',-.4,-.21,.66);set('shR',-.4,.21,.66);
+  set('knL',.3,-.13,.4);set('knR',.3,.13,.4);set('anL',.62,-.15,.08);set('anR',.62,.15,.08);set('elL',-.55,-.36,.4);set('elR',-.55,.36,.4);set('hdL',-.6,-.4,.12);set('hdR',-.6,.4,.12)}
+ else{const ph=o.ph||0,sw=pose==='run'?sin(ph):0,sk=pose==='run'?.34:0,lift=pose==='run'?.14:0;
+  set('hip',0,0,.95);set('chest',0,0,1.38);set('head',.02,0,1.72);set('shL',0,-.21,1.45);set('shR',0,.21,1.45);
+  set('knL',.04+sk*sw,-.11,.52+lift*max(0,sw));set('knR',.04-sk*sw,.11,.52+lift*max(0,-sw));
+  set('anL',-.02+sk*1.2*sw-.12*abs(sw),-.12,.08+lift*max(0,-sw)*.6);set('anR',-.02-sk*1.2*sw-.12*abs(sw),.12,.08+lift*max(0,sw)*.6);
+  const ar=pose==='run'?.25:0;set('elL',-ar*sw,-.3,1.15);set('elR',ar*sw,.3,1.15);set('hdL',.18-ar*sw,-.28,.98);set('hdR',.18+ar*sw,.28,.98)}
+ return J}
+function pilotM(B,base,fw,rt,J,pitch=0,roll=0,cols){const up=[0,0,1],cp=cos(pitch),sp=sin(pitch),cr=cos(roll),sr=sin(roll);
+ const W=v=>{let[f,r,u]=v;const f1=f*cp+u*sp,u1=-f*sp+u*cp;f=f1;u=u1;const r1=r*cr-u*sr,u2=r*sr+u*cr;r=r1;u=u2;return V3a(base,V3a(V3k(fw,f),V3a(V3k(rt,r),V3k(up,u))))};
+ const P={};for(const k in J)P[k]=W(J[k]);
+ const suit=cols.suit,s2=sh3(suit,.78),dk=hex3('#1d1f24'),hw=hex3('#2a2d33'),skin=hex3('#d9a784'),hel=cols.hel;
+ const ax=W([1,0,0]),o0=W([0,0,0]),EX=V3s(ax,o0),EY=V3s(W([0,1,0]),o0),EZ=V3s(W([0,0,1]),o0);
+ const k=MAT;MAT=3;
+ // ноги: бёдра, голени, ботинки
+ for(const s of['L','R']){const sg=s==='L'?-1:1,hp=W([J.hip[0],J.hip[1]+sg*.11,J.hip[2]]),kn=P['kn'+s],an=P['an'+s],toe=V3a(an,V3a(V3k(EX,.2),V3k(EZ,-.03)));
+  tubeM(B,hp,kn,.088,s2,6);tubeM(B,kn,an,.07,s2,6);tubeM(B,V3a(an,V3k(EX,-.05)),toe,.065,dk,5)}
+ // туловище, плечи, шея, шлем с визором
+ tubeM(B,P.hip,P.chest,.17,suit,7);tubeM(B,P.shL,P.shR,.085,suit,5);
+ const nk=V3m(P.chest,P.head,.45);tubeM(B,P.chest,nk,.06,skin,5);sphereM(B,P.head,.145,hel);
+ sphereM(B,V3a(P.head,V3a(V3k(EX,.085),V3k(EZ,-.01))),.1,hex3('#20262c'));
+ // ранец: основной и запасной, за спиной
+ const bc=V3a(V3m(P.hip,P.chest,.55),V3k(EX,-.22));obox(B,bc,EX,EY,V3n(V3s(P.chest,P.hip)),.1,.19,.28,hw);obox(B,V3a(bc,V3a(V3k(V3n(V3s(P.chest,P.hip)),.25),V3k(EX,.01))),EX,EY,V3n(V3s(P.chest,P.hip)),.09,.18,.05,sh3(cols.acc,.9));
+ // подвесная система: главные лямки, грудная перемычка, ножные обхваты
+ for(const sg of[-1,1]){const h0=W([J.hip[0]+.12,sg*.1,J.hip[2]+.02]),s0=P[sg<0?'shL':'shR'];tubeM(B,h0,V3a(s0,V3k(EX,.08)),.022,dk,4);
+  const kn=P[sg<0?'knL':'knR'];tubeM(B,h0,V3m(W([J.hip[0],sg*.11,J.hip[2]]),kn,.25),.03,dk,4)}
+ tubeM(B,W([J.chest[0]+.16,-.1,J.chest[2]-.05]),W([J.chest[0]+.16,.1,J.chest[2]-.05]),.02,dk,4);
+ // руки и перчатки
+ for(const s of['L','R']){tubeM(B,P['sh'+s],P['el'+s],.056,suit,5);tubeM(B,P['el'+s],P['hd'+s],.048,suit,5);sphereM(B,P['hd'+s],.062,dk)}
+ MAT=k;return P}
+// Купол и пилот в 3D. Оболочка — сетка по размаху (нервюры и надутые середины секций) и по хорде (нос, горб, задняя кромка)
+// со сглаженными нормалями; ткань просвечивает, если солнце с другой стороны. Стропы — ленты, пилот — трубки и шлем-шар
+function canopyM(B){const g=canopyGeo(),{ribs,fw,rt,up,ch,tk,Ln}=g,z=P.alt,n=ribs.length-1,tt=time+(P===BOTS[0]?1.3:P===BOTS[1]?2.9:P===BOTS[2]?4.1:0);
+ const dc=hypot(P.x-cm.x,P.y-cm.y,z+Ln-cm.z),near=dc<260,c1=hex3(C.c),c2=hex3(C.c2),suit=hex3(C.su||'#d94f2a'),dk=hex3('#1c1c1c');
+ // пилот: в полёте висит в подвесной системе; после касания — поза посадки (пробег, падение, подъём)
+ const rt0=[-sin(P.h),cos(P.h),0],la=P.la,base=[P.x,P.y,z];let J,pitch=0,roll=0;
+ if(!la)J=pilotJ('hang',{L:P.L,R:P.R,prep:cl(1-z/8,0,1),fl:cl((P.L+P.R)/2*1.3-.3,0,1)*cl(1-z/6,0,1)});
+ else{const t=la.t,E=x=>x<0?0:x>1?1:x*x*(3-2*x),up=la.hurt?0:E((t-2.1)/.9);
+  if(la.kind==='sit'){const A=pilotJ('stand',{}),Bj=pilotJ('sit',{}),k=E(t/.45)*(1-up);J={};for(const q in A)J[q]=A[q].map((v,i)=>v+(Bj[q][i]-v)*k)}
+  else{J=pilotJ(la.sp>.5?'run':'stand',{ph:la.ph});if(la.kind==='fallF')pitch=1.45*E((t-.1)/.55)*(1-up);if(la.kind==='side')roll=la.sg*1.35*E(t/.5)*(1-up)}}
+ const Pp=pilotM(B,base,fw.slice(0,2).concat(0),rt0,J,pitch,roll,{suit,hel:hex3('#f5c542'),acc:c2});
+ const sh1=Pp.shR,sh2=Pp.shL,hl=Pp.hdL,hr=Pp.hdR;
+ if((P.cc||0)>.97){ // купол погас и лёг на траву позади пилота — ветер сдувает его назад
+  const bk=[P.la.bk[0],P.la.bk[1],0],sp=Math.sqrt(C.a*.0929*2.3)/2,cc0=V3a(base,V3k(bk,Ln*.8)),o=[-bk[1]*sp,bk[0]*sp,0],q=V3k(bk,ch*.9);MAT=1;
+  quadM(B,V3a(V3s(cc0,o),[0,0,.12]),V3a(V3a(cc0,o),[0,0,.15]),V3a(V3a(V3a(cc0,o),q),[0,0,.3]),V3a(V3a(V3s(cc0,o),q),[0,0,.25]),c1,[0,0,1]);MAT=0;return}
+ // свободные концы (передние и задние), слайдер
+ MAT=0;const noL=(P.cc||0)>.45;const R4=[[sh2,-1,.07],[sh2,-1,-.07],[sh1,1,.07],[sh1,1,-.07]].map(([s0,sd,f])=>[0,1,2].map(i=>s0[i]+up[i]*.6+rt[i]*.08*sd+fw[i]*f));
+ for(let i=0;i<4;i++)tubeM(B,i<2?sh2:sh1,R4[i],.025,hex3('#30343a'),3);
+ if(near&&!noL){const sl=[0,1,2].map(i=>(R4[0][i]+R4[3][i])/2+up[i]*.55),slq=[[-.42,-.36],[.42,-.36],[.42,.36],[-.42,.36]].map(([a,b])=>[0,1,2].map(i=>sl[i]+rt[i]*a+fw[i]*b));
+  MAT=1;quadM(B,slq[0],slq[1],slq[2],slq[3],c2);MAT=0;
+  // стропы: ряды A и C (передний и задний свободные концы); по 2 стропы сходятся в каскад, от каскада — одна к свободному концу
+  const lc=hex3('#4a4a4a'),grp=[[0,1],[2,3],[4]];
+  for(const side of[0,1])for(const j of[0,2]){const R2=R4[side*2+(j<2?0:1)];
+   for(const g0 of grp){const ks=side?g0.map(k=>n-k):g0,m=ks.map(k=>ribs[k].ln[j]).reduce((a,p)=>V3a(a,V3k(p,1/ks.length)),[0,0,0]),cz=V3m(R2,m,.5);
+    for(const k of ks)lineM(B,ribs[k].ln[j],cz,.01,lc);lineM(B,cz,R2,.013,lc)}}
+  // клевантные стропы: три к задней кромке крайних секций, сходятся в одну и идут к руке
+  const o=hex3('#ff7a1a');for(const[hd,ks]of[[hl,[0,1,2]],[hr,[n,n-1,n-2]]]){const m=ks.map(k=>ribs[k].te).reduce((a,p)=>V3a(a,V3k(p,1/3)),[0,0,0]),cz=V3m(hd,m,.6);
+   for(const k of ks)lineM(B,ribs[k].te,cz,.01,o);lineM(B,cz,hd,.013,o)}}
+ // оболочка: столбцы по размаху
+ const bulge=(a,b,key,k)=>{const m=V3m(a[key],b[key]);return[0,1,2].map(i=>m[i]+up[i]*tk*k+fw[i]*(key==='le'?ch*.03:0))};
+ const cols=[];for(let k=0;k<=n;k++){cols.push({r:ribs[k],cell:min(k,n-1)});if(k<n&&near){const a=ribs[k],b=ribs[k+1];cols.push({r:{le:bulge(a,b,'le',.2),f1:bulge(a,b,'f1',.38),md:bulge(a,b,'md',.35),te:bulge(a,b,'te',.08),bl:bulge(a,b,'bl',-.12),bm:bulge(a,b,'bm',-.1)},cell:k})}}
+ const surf=(keys,sgn,colf)=>{const G=cols.map(c=>keys.map(k=>c.r[k])),NC=G.length,NS=keys.length;
+  const N=G.map((col,i)=>col.map((p,s)=>{const dS=V3s(col[min(s+1,NS-1)],col[max(s-1,0)]),dC=V3s(G[min(i+1,NC-1)][s],G[max(i-1,0)][s]);let nn=V3n(V3c(dC,dS));
+   if((nn[0]*up[0]+nn[1]*up[1]+nn[2]*up[2])*sgn<0)nn=V3k(nn,-1);return nn}));
+  for(let i=0;i<NC-1;i++)for(let s=0;s<NS-1;s++){const cc=colf(cols[i].cell,s),a=G[i][s],b=G[i+1][s],c=G[i+1][s+1],d=G[i][s+1];
+   vtx(B,a,N[i][s],cc);vtx(B,b,N[i+1][s],cc);vtx(B,c,N[i+1][s+1],cc);vtx(B,a,N[i][s],cc);vtx(B,c,N[i+1][s+1],cc);vtx(B,d,N[i][s+1],cc)}};
+ MAT=1;
+ const topc=k=>k===(n>>1)||k===0||k===n-1?c2:c1,nosec=k=>k===(n>>1)?c1:c2;
+ surf(['le','f1','md','te'],1,(k,s)=>s===0?nosec(k):topc(k));
+ surf(['bl','bm','te'],-1,k=>sh3(topc(k),.92));
+ MAT=0;for(let i=0;i<cols.length-1;i++){const a=cols[i].r,b=cols[i+1].r;quadM(B,a.le,b.le,b.bl,a.bl,sh3(topc(cols[i].cell),.18))}
+ MAT=1;for(const k of[0,n]){const r=ribs[k],tip=[0,1,2].map(i=>r.bm[i]-up[i]*ch*.4*(1-(P.cc||0)));triM(B,r.bl,tip,r.te,sh3(c2,.9))}
+ // вытяжной купол на стропе-соединителе
+ if(near){const r4=ribs[n>>1],r5=ribs[(n>>1)+1],top=[0,1,2].map(i=>(r4.md[i]+r5.md[i])/2+up[i]*tk*.4),sw=sin(tt*3.1)*.25,
+   b1=[0,1,2].map(i=>top[i]-fw[i]*1.6+up[i]*.25+rt[i]*sw*.4),pc=[0,1,2].map(i=>top[i]-fw[i]*3.1+up[i]*.15+rt[i]*sw);
+  lineM(B,top,b1,.02,hex3('#e8e8e8'));lineM(B,b1,pc,.02,hex3('#e8e8e8'));MAT=1;tubeM(B,pc,[0,1,2].map(i=>pc[i]-fw[i]*.55+rt[i]*sin(tt*9)*.08),.15,c2,5)}
+ MAT=0}
+// все купола: свой, парашютисты в воздухе; приземлившиеся — купол лёг по ветру, пилот стоит
+function canopiesM(){const B=MB(),sP=P,sC=C;
+ for(const b of mode!=='brief'?BOTS:[]){if(hypot(b.x-cm.x,b.y-cm.y)>3500||(!b.on&&b.t>=6))continue;
+  if(b.on){P=b;C=b.C;canopyM(B);P=sP;C=sC;continue}
+  const g0=wind(0),ws=max(g0.s,.5),wd=[g0.x/ws,g0.y/ws],nd=[-wd[1],wd[0]],sp=Math.sqrt(b.C.a*.0929*2.3)/2,o=[b.x+wd[0]*5,b.y+wd[1]*5],c=hex3(b.C.c);
+  MAT=1;quadM(B,[o[0]+nd[0]*sp,o[1]+nd[1]*sp,.12],[o[0]+nd[0]*sp+wd[0]*3,o[1]+nd[1]*sp+wd[1]*3,.12],[o[0]-nd[0]*sp+wd[0]*3,o[1]-nd[1]*sp+wd[1]*3,.3],[o[0]-nd[0]*sp,o[1]-nd[1]*sp,.3],c,[0,0,1]);
+  MAT=3;tubeM(B,[b.x,b.y,0],[b.x,b.y,1.45],.2,hex3(b.C.su||'#d94f2a'));sphereM(B,[b.x,b.y,1.7],.15,hex3('#f5c542'));MAT=0}
+ canopyM(B);gatesM(B);return B}
+
+// музей: вертолёты, самолёты, бронетехника, стела с истребителем, ели и флагштоки (всё в координатах OSM)
+function museumM(B){const W=p=>[p[0]-TGT[0],p[1]-TGT[1]];
+ const fr=(x,y,ang)=>{const a=rad(ang),f=[sin(a),-cos(a)],r=[cos(a),sin(a)],[X,Y]=W([x,y]);return{P:(lx,ly)=>[X+r[0]*lx+f[0]*ly,Y+r[1]*lx+f[1]*ly],P3:(lx,ly,z)=>[X+r[0]*lx+f[0]*ly,Y+r[1]*lx+f[1]*ly,z]}};
+ const bx=(F,lx0,lx1,ly0,ly1,z0,z1,col)=>prismM(B,{p:[F.P(lx0,ly0),F.P(lx1,ly0),F.P(lx1,ly1),F.P(lx0,ly1)],h:z1-z0,z0,col:typeof col==='string'?hex3(col):col});
+ const flat=(F,pts,z0,z1,col)=>prismM(B,{p:pts.map(([a,b])=>F.P(a,b)),h:z1-z0,z0,col:typeof col==='string'?hex3(col):col});
+ const dk='#23272b',gl='#2d3a44';
+ const rotor=(F,ly,z,r,nb,ph)=>{for(let i=0;i<nb;i++){const q=ph+i/nb*6.283,c=cos(q),s2=sin(q),w=.25;
+  flat(F,[[-s2*w,c*w],[c*r-s2*w,s2*r+c*w],[c*r+s2*w,s2*r-c*w],[s2*w,-c*w]].map(([a,b])=>[a,b+ly]),z,z+.08,'#30343a')}};
+ for(const[t,x,y,ang,col,col2]of MUS){const[X,Y]=W([x,y]);acM(B,t,X,Y,ang,col,col2)}
+ // стела: серый постамент и истребитель на взлёте, флагштоки вдоль плиточной площадки
+ {const F=fr(STELE[0],STELE[1],230),g=hex3('#6b8a4e'),gp=hex3('#c7cacd'),pz=(ly)=>7.4+ly*.27;
+  bx(F,-1.3,1.3,-.9,.9,0,6.6,gp);tubeM(B,F.P3(0,0,6.6),F.P3(0,0,pz(0)-.3),.18,gp,5);
+  tubeM(B,F.P3(0,-4.4,pz(-4.4)),F.P3(0,3.8,pz(3.8)),.55,g,7);coneM(B,...F.P(0,3.9),pz(3.9)-.5,pz(3.9)+.3,.1,.1,4,hex3(dk),hex3(dk));
+  const wing=(lx0,lx1,ly0,ly1,dz)=>{const q=[F.P3(lx0,ly0,pz(ly0)+dz),F.P3(lx1,ly0,pz(ly0)+dz),F.P3(lx1,ly1,pz(ly1)+dz),F.P3(lx0,ly1,pz(ly1)+dz)];quadM(B,q[0],q[1],q[2],q[3],g);quadM(B,q[3],q[2],q[1],q[0],g)};
+  wing(-4.9,4.9,-.3,1.6,-.25);wing(-1.8,1.8,-4.4,-3.6,.1);
+  {const a=F.P3(0,-4.4,pz(-4.4)+.3),b=F.P3(0,-3.4,pz(-3.4)+.3),c=F.P3(0,-4.5,pz(-4.5)+1.6);triM(B,a,b,c,g);triM(B,c,b,a,g)}
+  const pc=hex3('#e0e0e0');for(let i=0;i<5;i++){const p=W([-16-i*2.6,812+i*4]);coneM(B,p[0],p[1],0,7,.05,.04,4,pc,pc);
+   const q=[[p[0],p[1],7],[p[0]+1.2,p[1]+.3,6.9],[p[0]+1.2,p[1]+.3,6.1],[p[0],p[1],6.2]],fc=hex3(['#d63b30','#2f6fd6','#f2f2ee','#d63b30','#f2c83a'][i]);quadM(B,q[0],q[1],q[2],q[3],fc);quadM(B,q[3],q[2],q[1],q[0],fc)}}
+ for(const f of MUS_FIRS){const p=W(f);coneM(B,p[0],p[1],0,.8,.2,.2,4,TRUNK,TRUNK);coneM(B,p[0],p[1],.6,8.5,2.3,.05,8,hex3('#2c4529'),hex3('#46663c'))}}
+// ---------- Техника, люди, вода, кирпичные дорожки ----------
+// Самолёты и вертолёты по типам (координаты игры, курс носа в градусах от севера). Используется в музее, на стоянке и для самолёта-выброски
+function acM(B,t,X,Y,ang,col,col2){const a=rad(ang),f=[sin(a),-cos(a)],r=[cos(a),sin(a)];
+ const F={P:(lx,ly)=>[X+r[0]*lx+f[0]*ly,Y+r[1]*lx+f[1]*ly],P3:(lx,ly,z)=>[X+r[0]*lx+f[0]*ly,Y+r[1]*lx+f[1]*ly,z]};
+ const bx=(lx0,lx1,ly0,ly1,z0,z1,cc)=>prismM(B,{p:[F.P(lx0,ly0),F.P(lx1,ly0),F.P(lx1,ly1),F.P(lx0,ly1)],h:z1-z0,z0,col:typeof cc==='string'?hex3(cc):cc});
+ const flat=(pts,z0,z1,cc)=>prismM(B,{p:pts.map(([p,q])=>F.P(p,q)),h:z1-z0,z0,col:typeof cc==='string'?hex3(cc):cc});
+ const dk='#23272b',gl='#2d3a44',c=hex3(col),c2=col2?hex3(col2):sh3(c,.8);
+ const rotor=(ly,z,rr,nb,ph)=>{for(let i=0;i<nb;i++){const q=ph+i/nb*6.283,cq=cos(q),sq=sin(q),w=.25;
+  flat([[-sq*w,cq*w],[cq*rr-sq*w,sq*rr+cq*w],[cq*rr+sq*w,sq*rr-cq*w],[sq*w,-cq*w]].map(([p,q2])=>[p,q2+ly]),z,z+.08,'#30343a')}};
+ const prop=(lx,ly,z,rr)=>{const q=[F.P3(lx-rr,ly,z),F.P3(lx+rr,ly,z),F.P3(lx+rr,ly,z+.12),F.P3(lx-rr,ly,z+.12)],k=hex3('#3a3a3a');quadM(B,q[0],q[1],q[2],q[3],k);quadM(B,q[3],q[2],q[1],q[0],k)};
+ if(t==='heli8'){bx(-1.25,1.25,-7,4,.6,3.4,c);bx(-1.05,1.05,4,6,.8,2.9,c);bx(-1,1,4.6,6,2.1,2.9,gl);bx(-.9,.9,-3,3,3.4,4.3,sh3(c,.9));
+  bx(-.35,.35,-15,-7,2.2,3,c);bx(-.1,.1,-15.6,-14,2.2,5,c);coneM(B,...F.P(0,0),4.3,4.8,.2,.15,6,hex3(dk),hex3(dk));rotor(0,4.8,10.6,5,.4);
+  for(const[p,q]of[[-1.4,-2],[1.4,-2],[0,4.5]])bx(p-.2,p+.2,q-.35,q+.35,0,.7,dk)}
+ else if(t==='heli2'){bx(-.9,.9,-3,2.4,.5,2.3,c);bx(-.85,.85,2.4,3.8,.6,2.1,c);bx(-.8,.8,2.6,3.9,1.3,2.1,gl);bx(-.6,.6,-1.5,1.8,2.3,2.9,sh3(c,.9));
+  bx(-.25,.25,-9,-3,1.5,2.1,c);bx(-.07,.07,-9.4,-8.4,1.5,3.3,c);coneM(B,...F.P(0,.2),2.9,3.3,.15,.1,6,hex3(dk),hex3(dk));rotor(.2,3.3,7.2,3,1.1);
+  bx(-1.2,-1.05,-2,2.5,0,.12,dk);bx(1.05,1.2,-2,2.5,0,.12,dk);bx(-1.2,-1.05,-.5,-.3,0,.6,dk);bx(1.05,1.2,-.5,-.3,0,.6,dk)}
+ else if(t==='jet'){bx(-.6,.6,-5,5,.9,2.1,c);bx(-.45,.45,5,5.8,1,2,sh3(c,.85));bx(-.4,.4,1.5,3.2,2.1,2.6,gl);
+  flat([[.6,1.8],[4.8,-1.2],[4.8,-2.4],[.6,-1.2]],1.2,1.34,c);flat([[-.6,1.8],[-.6,-1.2],[-4.8,-2.4],[-4.8,-1.2]],1.2,1.34,c);
+  flat([[.5,-3.6],[2.3,-5.2],[2.3,-5.8],[.5,-5]],1.8,1.9,c);flat([[-.5,-3.6],[-.5,-5],[-2.3,-5.8],[-2.3,-5.2]],1.8,1.9,c);bx(-.08,.08,-5.4,-3,2.1,4,c);
+  for(const[p,q]of[[-1.3,-.5],[1.3,-.5],[0,3.8]])bx(p-.1,p+.1,q-.2,q+.2,0,.95,dk)}
+ else if(t==='yak'){bx(-.5,.5,-3.8,3.2,.6,1.6,c);bx(-.45,.45,3.2,3.9,.7,1.5,c2);bx(-.38,.38,-.2,1.8,1.6,2,gl);prop(0,3.95,1.05,.9);
+  bx(-3.8,3.8,.5,2.1,.7,.85,c);bx(-4.6,-3.8,.6,2,.7,.85,c2);bx(3.8,4.6,.6,2,.7,.85,c2);
+  bx(-1.6,1.6,-3.8,-3,1.3,1.4,c);bx(-.06,.06,-3.9,-3,1.4,2.5,c2);for(const p of[-1.2,1.2])bx(p-.08,p+.08,1,1.3,0,.7,dk)}
+ else if(t==='l410'){ // Л-410: высокоплан, два турбовинтовых, 14,4 м × 19,5 м; col2 — пятна или полоса
+  bx(-.95,.95,-6.5,6.5,.8,2.8,c);bx(-.8,.8,6.5,7.6,1,2.4,c);bx(-.85,.85,5.2,6.8,2.1,2.7,gl);bx(-.97,.97,-3,4,1.5,1.9,c2);
+  bx(-.7,.7,-9,-6.5,1.5,2.7,c);bx(-9.75,9.75,.5,2.6,2.9,3.12,c);bx(-9.75,-7,.6,2.5,2.91,3.13,c2);bx(7,9.75,.6,2.5,2.91,3.13,c2);
+  for(const p of[-3.3,3.3]){bx(p-.45,p+.45,-1,4.2,2.2,3.1,c2);prop(p,4.3,2.6,1.25)}
+  bx(-.1,.1,-9.4,-7,2.7,5.4,c2);bx(-3.3,3.3,-9.2,-8,4.1,4.24,c);
+  for(const p of[-1.35,1.35])bx(p-.25,p+.25,-.6,.6,0,1,dk);bx(-.12,.12,5.6,6,0,.9,dk)}
+ else if(t==='an2'){bx(-.9,.9,-3,5.5,.9,2.8,c);bx(-.6,.6,-6.5,-3,1.3,2.5,c);bx(-.8,.8,5.5,6.6,1,2.6,hex3(dk));bx(-.8,.8,3.2,4.8,2.8,3.2,gl);prop(0,6.7,1.8,1.7);
+  bx(-9,9,1,3.4,3.6,3.75,c);bx(-7,7,1.2,3.2,1.1,1.25,c);for(const p of[-4.5,4.5])bx(p-.06,p+.06,2,2.3,1.25,3.6,hex3(dk));
+  bx(-.1,.1,-6.8,-5,2.3,4.4,c);bx(-3.6,3.6,-6.6,-5.2,2.2,2.32,c);for(const p of[-1.6,1.6])bx(p-.15,p+.15,3.5,4,0,1,dk);bx(-.1,.1,-6.3,-6,0,1.2,dk)}
+ else if(t==='btr'){bx(-1.4,1.4,-3.6,3.6,.5,2,c);bx(-1.2,1.2,3.6,4.2,.6,1.5,sh3(c,.9));coneM(B,...F.P(0,.8),2,2.6,.55,.45,8,c,c);tubeM(B,F.P3(0,1.1,2.35),F.P3(0,2.6,2.4),.05,hex3(dk),4);
+  for(let i=0;i<4;i++)for(const p of[-1.55,1.55])bx(p-.15,p+.15,-2.8+i*1.8-.45,-2.8+i*1.8+.45,0,.9,dk)}
+ else if(t==='t34'){bx(-1.5,1.5,-3,3,.4,1.5,c);for(const p of[-1.65,1.65])bx(p-.25,p+.25,-3.1,3.1,0,1,dk);bx(-1,1,-1,1.2,1.5,2.3,c);tubeM(B,F.P3(0,1.2,1.9),F.P3(0,5,1.95),.08,c,5)}
+ else if(t==='kat'){bx(-1.1,1.1,2,3.5,.8,2.4,c);bx(-1,1,3.1,3.5,1.6,2.3,gl);bx(-1.1,1.1,-3.5,2,.8,1.2,c);
+  for(let i=0;i<8;i++){const p=-1+i*2/7;tubeM(B,F.P3(p,-3,1.4),F.P3(p,1.6,2.5),.06,hex3('#3d4633'),4)}
+  for(const q of[-2.8,-1.4,2.6])for(const p of[-1.15,1.15])bx(p-.18,p+.18,q-.45,q+.45,0,.9,dk)}
+ else if(t==='gun'){bx(-.9,.9,.2,.32,.4,1.6,c);tubeM(B,F.P3(0,-.3,1),F.P3(0,3.2,1.25),.07,c,5);tubeM(B,F.P3(0,0,.5),F.P3(-1.4,-2.6,0),.06,c,4);tubeM(B,F.P3(0,0,.5),F.P3(1.4,-2.6,0),.06,c,4);
+  for(const p of[-.8,.8])coneM(B,...F.P(p,0),0,.55,.35,.35,8,hex3(dk),hex3(dk))}}
+// перенос и крен готового куска сетки (для самолёта в воздухе): вершины с индекса i0 поворачиваются вокруг оси fw на угол ph и поднимаются на dz
+function xformM(B,i0,c,fw,ph,dz){const cs=cos(ph),sn=sin(ph),rot=v=>{const cx=fw[1]*v[2]-fw[2]*v[1],cy=fw[2]*v[0]-fw[0]*v[2],cz=fw[0]*v[1]-fw[1]*v[0],d=fw[0]*v[0]+fw[1]*v[1]+fw[2]*v[2];
+  return[v[0]*cs+cx*sn+fw[0]*d*(1-cs),v[1]*cs+cy*sn+fw[1]*d*(1-cs),v[2]*cs+cz*sn+fw[2]*d*(1-cs)]};
+ for(let i=i0;i<B.v.length;i+=VS){const p=rot([B.v[i]-c[0],B.v[i+1]-c[1],B.v[i+2]-1.8]),n=rot([B.v[i+3],B.v[i+4],B.v[i+5]]);
+  B.v[i]=p[0]+c[0];B.v[i+1]=p[1]+c[1];B.v[i+2]=p[2]+dz;B.v[i+3]=n[0];B.v[i+4]=n[1];B.v[i+5]=n[2]}}
+// кирпичная дорожка: лента по ломаной (координаты игры) с бордюрами; узор кладки рисует шейдер (материал 4 + направление)
+function stripM(B,pts,w,col,curb=true){const c=hex3(col),cb=hex3('#d9d5cc');
+ for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=[b[0]-a[0],b[1]-a[1]],l=hypot(...d);if(l<.01)continue;const u=[d[0]/l,d[1]/l],n=[-u[1]*w/2,u[0]*w/2],e=[u[0]*w*.5,u[1]*w*.5];
+  const ang=((atan2(u[1],u[0])/6.283)%1+1)%1;MAT=4+ang*.999;
+  const A=[a[0]-e[0]*(i>1?1:0),a[1]-e[1]*(i>1?1:0)],Bq=[b[0],b[1]];
+  quadM(B,[A[0]+n[0],A[1]+n[1],.035],[A[0]-n[0],A[1]-n[1],.035],[Bq[0]-n[0],Bq[1]-n[1],.035],[Bq[0]+n[0],Bq[1]+n[1],.035],c,[0,0,1]);MAT=0;
+  if(curb)for(const s of[1,-1]){const o=[n[0]*s*1.05,n[1]*s*1.05],q=[n[0]*s*1.12,n[1]*s*1.12];
+   prismM(B,{p:[[A[0]+o[0],A[1]+o[1]],[A[0]+q[0],A[1]+q[1]],[Bq[0]+q[0],Bq[1]+q[1]],[Bq[0]+o[0],Bq[1]+o[1]]],h:.09,col:cb})}}}
+// вода: бассейны (бирюзовые, с бортиком из плитки) и свуп-понд; рябь, отражение неба и блик солнца — в шейдере (материал 6 — бассейн, 7 — пруд)
+function waterM(B,poly,kind){const c=hex3(kind?'#2f6f86':'#35b8d4');MAT=kind?7:6;for(const[i,j,k]of earcut2(poly))triM(B,[poly[i][0],poly[i][1],.05],[poly[j][0],poly[j][1],.05],[poly[k][0],poly[k][1],.05],c,[0,0,1]);MAT=0;
+ const n=poly.length,rim=hex3(kind?'#8a7556':'#ecebe6'),wd=kind?.9:.7;let A=0;for(let i=0;i<n;i++){const q=poly[(i+1)%n];A+=poly[i][0]*q[1]-q[0]*poly[i][1]}const sg=A>0?1:-1;
+ for(let i=0;i<n;i++){const a=poly[i],b=poly[(i+1)%n],d=[b[0]-a[0],b[1]-a[1]],l=hypot(...d)||1,o=[d[1]/l*sg*wd,-d[0]/l*sg*wd];
+  prismM(B,{p:[a,b,[b[0]+o[0],b[1]+o[1]],[a[0]+o[0],a[1]+o[1]]],h:kind?.12:.22,col:rim})}}
+// человек: pose 0 — стоит, 1 — идёт (ph — фаза шага), 2 — на коленях (укладка), 3 — смотрит вверх, рука козырьком; d — куда смотрит
+function personM(B,x,y,d,pose,shirt,ph=0,carry){const k=MAT;MAT=3;const r=[-d[1],d[0]],P=(f,s,z)=>[x+d[0]*f+r[0]*s,y+d[1]*f+r[1]*s,z],sc=hex3(shirt),pc=hex3('#2b2f3a'),sk=hex3('#d9a784');
+ const kn=pose===2,hip=kn?.55:.95,sw=pose===1?sin(ph)*.32:0;
+ if(kn){tubeM(B,P(0,-.12,hip),P(.35,-.12,.2),.08,pc,4);tubeM(B,P(.35,-.12,.2),P(-.15,-.12,.08),.07,pc,4);tubeM(B,P(0,.12,hip),P(.35,.12,.2),.08,pc,4);tubeM(B,P(.35,.12,.2),P(-.15,.12,.08),.07,pc,4)}
+ else{tubeM(B,P(0,-.1,hip),P(sw,-.1,.05),.08,pc,4);tubeM(B,P(0,.1,hip),P(-sw,.1,.05),.08,pc,4)}
+ const top=hip+.6,lean=kn?.25:0;tubeM(B,P(0,0,hip),P(lean,0,top),.17,sc,5);
+ if(carry){tubeM(B,P(.25,-.35,hip+.15),P(.25,.35,hip+.25),.28,hex3(carry),6)}
+ else if(pose===3){tubeM(B,P(0,-.2,top-.05),P(.05,-.3,hip),.05,sc,4);tubeM(B,P(0,.2,top-.05),P(.15,.1,top+.2),.05,sc,4)}
+ else if(kn){tubeM(B,P(lean,-.2,top-.05),P(.6,-.2,.25),.05,sc,4);tubeM(B,P(lean,.2,top-.05),P(.6,.2,.25),.05,sc,4)}
+ else{tubeM(B,P(0,-.21,top-.05),P(-sw*.6,-.24,hip),.05,sc,4);tubeM(B,P(0,.21,top-.05),P(sw*.6,.24,hip),.05,sc,4)}
+ sphereM(B,P(lean,0,top+.17),.12,sk);MAT=k}
+// жизнь на площадке: зрители у ограждения, укладчики на газоне у ангара, прохожие на кирпичной дорожке, машины у гостиницы
+const SHIRTS=['#d94f2a','#2f6fd6','#f2f2ee','#2a2e38','#e0c21a','#1f9e6e','#c2362f','#7a3fc4','#8a8f98','#f28c28'];
+const TOWN_D=[-TN_[0],-TN_[1]]; // «лицом к полю»
+function lifeStaticM(B){const H=(i,j)=>hash(i*7+3,j*13+5);
+ for(let i=0;i<8;i++){const t=8+i*11+H(i,1)*6,p=TT(t,2.2+H(i,2)*.8),a=(H(i,3)-.5)*.8,d=[TOWN_D[0]*cos(a)-TOWN_D[1]*sin(a),TOWN_D[0]*sin(a)+TOWN_D[1]*cos(a)];personM(B,p[0],p[1],d,i%3===0?3:0,SHIRTS[i%10])}
+ for(let i=0;i<3;i++){const p=TT(26+i*3,13+i*.7);personM(B,p[0],p[1],[TU[0],TU[1]],0,SHIRTS[(i+6)%10])}
+ // машины на стоянке у гостиницы
+ for(let i=0;i<12;i++){const t=i<6?-170:-151,n=8+(i%6)*8,p=TT(t,n);carM(B,p[0],p[1],[TU[0],TU[1]],['#c8ccd2','#2f3640','#a3262a','#e9e9e4','#3b5b8a','#6b6f45','#d8d0bf'][i%7],false)}}
+// подвижное: прохожие, приземлившиеся парашютисты идут к ангару с куполом в охапке, самолёт-выброска на кругу над аэродромом
+function lifeDynM(B){const T=performance.now()/1000;
+ for(let i=0;i<5;i++){const L=200,v=1.1+hash(i,9)*.5,s=((T*v+i*57)%(2*L)),tt=s<L?s:2*L-s,dir=s<L?1:-1,t=-110+tt,p=TT(t,8+(i%2)*1.1-.55),d=[TU[0]*dir,TU[1]*dir];
+  personM(B,p[0],p[1],d,1,SHIRTS[(i+1)%10],T*v*4.2+i)}
+ const door=TT(51,15);
+ for(const b of mode!=='brief'?BOTS:[]){if(b.on||b.t<6)continue;const dx=door[0]-b.x,dy=door[1]-b.y,dl=hypot(dx,dy)||1,s=(b.t-6)*1.3;if(s>dl)continue;
+  personM(B,b.x+dx/dl*s,b.y+dy/dl*s,[dx/dl,dy/dl],1,b.C.su||'#d94f2a',b.t*5.4,b.C.c)}
+ // Л-410 на 1100 м ходит «ипподромом» над ВПП: прямая вдоль полосы (с запасом 600 м за торцами), разворот, обратно в 900 м севернее — над городком не летает
+ {const A0=[-382-600*.9991-TGT[0],172+600*.0432-TGT[1]],u=[.9991,-.0432],nn=[-.0432,-.9991],Ls=810+1200,Rt=450,v=55,Pm=2*Ls+2*Math.PI*Rt,s0=(T*v)%Pm;let x,y,fw,bank=0;
+  if(s0<Ls){x=A0[0]+u[0]*s0;y=A0[1]+u[1]*s0;fw=[u[0],u[1],0]}
+  else if(s0<Ls+Math.PI*Rt){const q=(s0-Ls)/Rt,c=[A0[0]+u[0]*Ls+nn[0]*Rt,A0[1]+u[1]*Ls+nn[1]*Rt];x=c[0]-nn[0]*Rt*cos(q)+u[0]*Rt*sin(q);y=c[1]-nn[1]*Rt*cos(q)+u[1]*Rt*sin(q);fw=[u[0]*cos(q)+nn[0]*sin(q),u[1]*cos(q)+nn[1]*sin(q),0];bank=1}
+  else if(s0<2*Ls+Math.PI*Rt){const q=s0-Ls-Math.PI*Rt;x=A0[0]+u[0]*(Ls-q)+nn[0]*2*Rt;y=A0[1]+u[1]*(Ls-q)+nn[1]*2*Rt;fw=[-u[0],-u[1],0]}
+  else{const q=(s0-2*Ls-Math.PI*Rt)/Rt,c=[A0[0]+nn[0]*Rt,A0[1]+nn[1]*Rt];x=c[0]+nn[0]*Rt*cos(q)-u[0]*Rt*sin(q);y=c[1]+nn[1]*Rt*cos(q)-u[1]*Rt*sin(q);fw=[-u[0]*cos(q)-nn[0]*sin(q),-u[1]*cos(q)-nn[1]*sin(q),0];bank=1}
+  const ang=atan2(fw[0],-fw[1])*180/Math.PI,i0=B.v.length;acM(B,'l410',x,y,ang,'#f0f0ec','#2f5fa8');xformM(B,i0,[x,y],fw,bank*-.35,1100)}}
+// деревья по клеткам 500 м (пересобираются при смене сезона)
+function treeCells(up){if(!TREES)mkTrees();const cells=new Map();
+ for(const t of TREES){const k=Math.floor(t[0]/500)+':'+Math.floor(t[1]/500);let c=cells.get(k);if(!c){c={B:MB(),x:(Math.floor(t[0]/500)+.5)*500,y:(Math.floor(t[1]/500)+.5)*500};cells.set(k,c)}
+  if(c.B.v.length/VS<64000)treeM(c.B,t)}
+ return[...cells.values()].map(c=>({...up(c.B),x:c.x,y:c.y}))}
+// ---------- Сезоны и трава ----------
+// Сезон: оттенок травы, сухость (метёлки, выгоревшие пятна), цвет полей (зреют к августу, осенью — стерня и пашня), листва
+const SEAS={
+ summer:{n:'Лето',gt:[.98,1.04,.95],dry:.1,fc:[.55,.62,.33],fm:0,pl:0,tree:[['#5e7a34','#8fae4e'],['#4a6230','#789a48']],tb:[.3,.42,.16],tt:[.52,.62,.28]},
+};
+let SEA=SEAS.summer;
+function setSeason(k){SEA=SEAS[k]||SEAS.summer;TREE_C=SEA.tree.map(t=>hex3(t[0]));TREE_HI=SEA.tree.map(t=>hex3(t[1]));if(SCN)SCN.treesDirty=1;if(GRS)GRS.key=''}
+// Травинки у земли: вокруг точки, куда смотрит камера, на 28 м; высокая трава 0,35–0,8 м, скошенная — 7–14 см.
+// Качаются по ветру у земли — по ним видно его направление и силу. Растут из земли по мере снижения (ниже 60 м)
+let GRS=null;
+function maskAt(x,y){if(!MASK)return[0,0,0];const n=MASK.n,px=Math.floor(x*MASK.k+n/2),py=Math.floor(y*MASK.k+n/2);if(px<0||py<0||px>=n||py>=n)return[0,0,0];const i=(py*n+px)*4,d=MASK.d;return[d[i]/255,d[i+1]/255,d[i+2]/255]}
+function grassInit(){const{gl}=GL;
+ const sh=(t,src)=>{const o=gl.createShader(t);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(o));return o},pr=gl.createProgram();
+ gl.attachShader(pr,sh(gl.VERTEX_SHADER,`attribute vec3 ap;attribute vec4 ab;uniform vec3 C,Rr,U,F,WD,GB,GP;uniform vec4 K;uniform vec2 NF;uniform float TM,GA;varying vec3 vc,vw;
+void main(){vec3 p=ap;float sw=(.45+.35*sin(TM*2.4+ab.y+dot(ap.xy,WD.xy)*.35))*(.15+WD.z)*ab.x*ab.z;p.xy+=WD.xy*sw*.7;p.z+=ab.x*ab.z*GA-sw*.2;
+ vc=mix(GB,GP,max(ab.x,step(1.5,ab.w)*.75))*(.78+.44*fract(ab.w))*(1.+.4*step(1.5,ab.w));vw=p;vec3 d=p-C;float x=dot(d,Rr),y=dot(d,U),z=dot(d,F);gl_Position=vec4(K.x*x+K.y*z,K.z*y+K.w*z,z*NF.x+NF.y,z);}`));
+ gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,`precision highp float;uniform vec3 C,SD,HZ,SC,LC;uniform float SK;uniform vec2 FD;uniform vec3 FO;varying vec3 vc,vw;
+void main(){float fd=smoothstep(FO.z*.72,FO.z,length(vw.xy-FO.xy));if(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)<fd)discard;
+ vec3 dv=vw-C;float t=length(dv);vec3 c=vc*(LC*.62+SC*SK*.5*max(SD.z,.2));vec3 fg=mix(HZ,SC,pow(max(dot(dv/t,SD),0.),6.)*.45);gl_FragColor=vec4(mix(c,fg,(1.-exp(-t/FD.y))*.92),1.);}`));
+ gl.bindAttribLocation(pr,0,'ap');gl.bindAttribLocation(pr,1,'ab');gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(pr));GRS={off:1};return}
+ const u={};['C','Rr','U','F','K','NF','WD','GB','GP','TM','GA','SD','HZ','SC','LC','SK','FD','FO'].forEach(n=>u[n]=gl.getUniformLocation(pr,n));
+ GRS={pr,u,vb:gl.createBuffer(),n:0,key:'',fx:1e9,fy:1e9}}
+function grassBuild(fx,fy){const R=28,st=.34,v=[];
+ for(let gx=Math.floor((fx-R)/st);gx<=Math.ceil((fx+R)/st);gx++)for(let gy=Math.floor((fy-R)/st);gy<=Math.ceil((fy+R)/st);gy++){
+  const h1=hash(gx,gy),h2=hash(gy+7,gx-3),x=(gx+h1)*st,y=(gy+h2)*st;if((x-fx)**2+(y-fy)**2>R*R)continue;
+  if(hypot(x-TG[0],y-TG[1])<3.6)continue;const m=maskAt(x,y);let h;
+  let mw=0;if(m[0]>.5)h=.35+.45*hash(gx*3,gy*5);else if(m[1]>.5){if(h1>.6)continue;h=.07+.07*h2;mw=2}else continue;
+  const a=hash(gx+11,gy*3)*6.283,w=(m[0]>.5?.045:.03)+.03*h2,px=cos(a)*w,py=sin(a)*w,lx=(h1-.5)*.25*h,ly=(h2-.5)*.25*h,ph=h1*6.283,cv=mw+hash(gx*7,gy+13)*.99;
+  v.push(x-px,y-py,0,0,ph,h,cv, x+px,y+py,0,0,ph,h,cv, x+lx,y+ly,0,1,ph,h,cv)}
+ return new Float32Array(v)}
+function drawGrass(){if(!MASK||(GRS&&GRS.off))return;if(!GRS)grassInit();if(GRS.off)return;const GA=cl((60-P.alt)/30,0,1);if(GA<=0)return;
+ const{gl}=GL,{pr,u}=GRS,w=WX,fx=P.x+cos(P.h)*9,fy=P.y+sin(P.h)*9,key='summer';
+ if(hypot(fx-GRS.fx,fy-GRS.fy)>5||GRS.key!==key){GRS.fx=fx;GRS.fy=fy;GRS.key=key;const a=grassBuild(fx,fy);gl.bindBuffer(gl.ARRAY_BUFFER,GRS.vb);gl.bufferData(gl.ARRAY_BUFFER,a,gl.DYNAMIC_DRAW);GRS.n=a.length/7}
+ if(!GRS.n)return;gl.useProgram(pr);const near=.3,far=9000,g0=wind(1);
+ gl.uniform3f(u.C,cm.x,cm.y,cm.z);gl.uniform3fv(u.Rr,cm.r);gl.uniform3fv(u.U,cm.u);gl.uniform3fv(u.F,cm.f);
+ gl.uniform4f(u.K,2*cm.F/W,2*cm.cx/W-1,2*cm.F/H,1-2*cm.cy/H);gl.uniform2f(u.NF,(far+near)/(far-near),-2*far*near/(far-near));
+ gl.uniform3f(u.WD,g0.x/max(g0.s,.1),g0.y/max(g0.s,.1),cl(g0.s/9,0,1));gl.uniform3fv(u.GB,SEA.tb);gl.uniform3fv(u.GP,SEA.tt);gl.uniform1f(u.TM,performance.now()/1000%1000);gl.uniform1f(u.GA,GA);
+ gl.uniform3fv(u.SD,SUN);gl.uniform3fv(u.HZ,w.hz);gl.uniform3fv(u.SC,w.sc);gl.uniform3fv(u.LC,w.lc);gl.uniform1f(u.SK,w.sk);gl.uniform2fv(u.FD,w.fd);gl.uniform3f(u.FO,GRS.fx,GRS.fy,28);
+ gl.enable(gl.DEPTH_TEST);gl.bindBuffer(gl.ARRAY_BUFFER,GRS.vb);gl.enableVertexAttribArray(0);gl.enableVertexAttribArray(1);for(const i of[2,3])gl.disableVertexAttribArray(i);
+ gl.vertexAttribPointer(0,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(1,4,gl.FLOAT,false,28,12);gl.drawArrays(gl.TRIANGLES,0,GRS.n);gl.disableVertexAttribArray(1);gl.disable(gl.DEPTH_TEST)}
+let SCN=null;const SMS=2048;
+function sceneInit(){const{gl}=GL;
+ const sh=(t,src)=>{const o=gl.createShader(t);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(o));return o};
+ const prog=(vs,fs,names)=>{const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));
+  ['ap','an','ac','am'].forEach((n,i)=>gl.bindAttribLocation(pr,i,n));gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(pr));return null}
+  const u={};names.forEach(n=>u[n]=gl.getUniformLocation(pr,n));return{pr,u}};
+ const main=prog(`attribute vec3 ap,an,ac;attribute float am;uniform vec3 C,Rr,U,F;uniform vec4 K;uniform vec2 NF;varying vec3 vn,vc,vw;varying float vm;
+void main(){vec3 d=ap-C;float x=dot(d,Rr),y=dot(d,U),z=dot(d,F);gl_Position=vec4(K.x*x+K.y*z,K.z*y+K.w*z,z*NF.x+NF.y,z);vn=an;vc=ac;vw=ap;vm=am;}`,
+ `precision highp float;uniform vec3 C,SD,HZ,SC,LC,ZC,LO,LX,LY,LZ;uniform float SK,SE,TM,CV;uniform vec2 FD,LS,DR;uniform sampler2D SM;uniform vec4 SH[6];uniform vec3 SZ[6];varying vec3 vn,vc,vw;varying float vm;
+float up4(vec4 c){return dot(c,vec4(1.,1./255.,1./65025.,1./16581375.));}
+float shad(vec3 p,vec3 n){if(SE<.5)return 1.;vec3 q=p+n*.25-LO;vec3 l=vec3(dot(q,LX),dot(q,LY),dot(q,LZ));vec2 uv=l.xy/LS.x*.5+.5;
+ if(uv.x<.01||uv.y<.01||uv.x>.99||uv.y>.99)return 1.;float z=l.z/LS.y-.00025,s=0.;
+ for(int i=0;i<4;i++){vec2 o=vec2(i==1||i==3?1.:-1.,i>=2?1.:-1.)*.5/${SMS}.;s+=z>up4(texture2D(SM,uv+o))?0.:1.;}
+ float e=max(abs(uv.x-.5),abs(uv.y-.5));return mix(s*.25,1.,smoothstep(.42,.49,e));}
+float h2(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float vn2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h2(i),h2(i+vec2(1.,0.)),f.x),mix(h2(i+vec2(0.,1.)),h2(i+1.),f.x),f.y);}
+// тени облаков и куполов на дорожках и воде — так же, как на земле
+float gsh(vec2 w){float n=0.,a=.5;vec2 p=(w+SD.xy/SD.z*1800.+DR)/1500.;for(int i=0;i<3;i++){n+=a*vn2(p);p=p*2.03+vec2(17.3,9.1);a*=.5;}
+ float th=mix(.72,.28,CV),cs=smoothstep(th,th+.16,n),sh=0.;
+ for(int i=0;i<6;i++){vec4 s=SH[i];if(s.w<-.5)continue;vec3 z=SZ[i];float ac=s.w+1.5+z.z;vec2 fw=vec2(cos(s.z),sin(s.z)),q=w-(s.xy-SD.xy/SD.z*ac);q=vec2(dot(q,fw),dot(q,vec2(-fw.y,fw.x)));
+  q.x+=q.y*q.y/z.x*.12;vec2 hb=vec2(z.y,z.x);float r=z.y*.8;vec2 e=abs(q)-hb+r;float sd=length(max(e,0.))+min(max(e.x,e.y),0.)-r,bl=.12+ac*.0093;sh=max(sh,.62*exp(-ac/900.)*(1.-smoothstep(-bl,bl,sd)));}
+ return (1.-.42*SK*cs)*(1.-sh*SK);}
+void main(){vec3 dv=vw-C;float t=length(dv);vec3 dir=dv/max(t,.001),n=normalize(vn);if(dot(n,dir)>0.)n=-n;
+ vec3 fg=mix(HZ,SC,pow(max(dot(dir,SD),0.),6.)*.45),c,sky=mix(HZ,ZC,.5);
+ if(vm>1.5&&vm<2.5)c=vc*(.55+.45*LC);
+ else if(vm>5.5){ // вода: рябь, отражение неба по Френелю, блик солнца
+  vec2 w=vw.xy;float k1=2.1,k2=3.3;vec2 d1=vec2(1.3,.7),d2=vec2(-.6,1.1);float a1=dot(w,d1)*k1+TM*1.7,a2=dot(w,d2)*k2+TM*2.3;
+  float amp=vm>6.5?.06:.035;vec2 g=(d1*k1*cos(a1)*.5+d2*k2*cos(a2)*.3)*amp;vec3 nw=normalize(vec3(-g,1.));
+  float F=.04+.96*pow(1.-max(dot(-dir,nw),0.),5.);vec3 rf=reflect(dir,nw),sk=mix(HZ,ZC,pow(clamp(rf.z,0.,1.),.5));
+  vec3 body=vc*(LC*.55+SC*.4*SK*max(SD.z,0.));float s=shad(vw,vec3(0.,0.,1.))*gsh(w);
+  c=mix(body*s,sk,F)+SC*pow(max(dot(rf,SD),0.),160.)*1.8*SK*s;}
+ else{float nd=dot(n,SD),dif=max(nd,0.)*SK,s=(vm<.5||vm>3.5)&&nd>0.?shad(vw,n):1.;vec3 base=vc;
+  if(vm>3.5){ // кирпич: перевязка «со смещением», у каждого кирпича свой оттенок, швы темнее; вдали — ровный цвет
+   float an=fract(vm)*6.283;vec2 q=vec2(cos(an)*vw.x+sin(an)*vw.y,-sin(an)*vw.x+cos(an)*vw.y);float row=floor(q.y/.12),xx=q.x/.25+row*.5;vec2 f=vec2(fract(xx),fract(q.y/.12));
+   float m=smoothstep(0.,.07,f.x)*smoothstep(1.,.93,f.x)*smoothstep(0.,.12,f.y)*smoothstep(1.,.88,f.y),hb=h2(vec2(floor(xx),row));
+   base=mix(mix(vc*.6,vc*(.82+.36*hb),m),vc,clamp((t-20.)/50.,0.,1.));s*=gsh(vw.xy);}
+  c=base*(LC*(.46+.2*n.z)*mix(vec3(1.),sky*1.15,.25)+SC*dif*.62*s);
+  if(vm>.5&&vm<1.5)c+=vc*SC*max(-nd,0.)*.5*SK;}
+ gl_FragColor=vec4(mix(c,fg,(1.-exp(-t/FD.y))*.92),1.);}`,['C','Rr','U','F','K','NF','SD','HZ','SC','LC','ZC','SK','FD','LO','LX','LY','LZ','LS','SE','SM','TM','CV','DR','SH','SZ']);
+ // тени: глубина из направления солнца, упакованная в RGBA (работает на любом WebGL 1)
+ const shp=prog(`attribute vec3 ap;uniform vec3 LO,LX,LY,LZ;uniform vec2 LS;void main(){vec3 q=ap-LO;gl_Position=vec4(dot(q,LX)/LS.x,dot(q,LY)/LS.x,dot(q,LZ)/LS.y*2.-1.,1.);}`,
+ `precision highp float;void main(){vec4 e=fract(vec4(1.,255.,65025.,16581375.)*gl_FragCoord.z);e-=e.yzww*vec4(1./255.,1./255.,1./255.,0.);gl_FragColor=e;}`,['LO','LX','LY','LZ','LS']);
+ if(!main||!shp)return;
+ const smt=gl.createTexture();gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,smt);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,SMS,SMS,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+ [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER].forEach(p=>gl.texParameteri(gl.TEXTURE_2D,p,gl.NEAREST));[gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T].forEach(p=>gl.texParameteri(gl.TEXTURE_2D,p,gl.CLAMP_TO_EDGE));
+ const fbo=gl.createFramebuffer(),rb=gl.createRenderbuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,smt,0);
+ gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,SMS,SMS);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rb);
+ const fok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.activeTexture(gl.TEXTURE0);
+ const up=(B,dyn)=>{const vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(B.v),dyn?gl.DYNAMIC_DRAW:gl.STATIC_DRAW);
+  let ib=null;if(B.i.length){ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(B.i),gl.STATIC_DRAW)}
+  return{vb,ib,n:B.i.length||B.v.length/VS}};
+ const S=MB();for(const b of BLD)prismM(S,b);townM(S);
+ for(const[x,y,i]of PARKED){const d=[cos(rad(UA+90)),sin(rad(UA+90))];carM(S,x,y,d,['#c8ccd2','#2f3640','#a3262a','#e9e9e4','#3b5b8a'][i%5],false)}
+ PLANES.forEach((p,i)=>{const t=i>=4?'an2':i===3?'yak':'l410';acM(S,t,p[0],p[1],p[2],t==='an2'?'#4e6a3e':'#f2f2ee',t==='l410'?'#2f5fa8':t==='yak'?'#c83a2e':null)});museumM(S);lifeStaticM(S);
+ for(const[q,w,c]of PATHS2)if(c==='#b0705a'||c==='#c49482')stripM(S,q,w,c,w>=2.4);
+ for(const[q]of POOLS)waterM(S,q,0);waterM(S,POND,1);
+ SCN={main,shp,smt,fbo,sm:fok,up,stat:up(S),trees:treeCells(up),dyn:{vb:gl.createBuffer()},can:{vb:gl.createBuffer()},L:null}}
+// кадр теней: квадрат вокруг точки перед камерой (чем выше, тем больше), привязан к сетке текселей, чтобы тени не дрожали
+function shadowFrame(){const L=SCN.L||(SCN.L={}),lz=V3k(SUN,-1),lx=V3n(V3c(lz,[0,0,1])),ly=V3c(lx,lz),hs=[180,360,720,1100].find(v=>v>=cm.z*1.7)||1100,k=hs*.55;
+ const c=[cm.x+cm.f[0]*k,cm.y+cm.f[1]*k,0],d=(p,q)=>p[0]*q[0]+p[1]*q[1]+p[2]*q[2],tx=2*hs/SMS,a=Math.round(d(c,lx)/tx)*tx,b=Math.round(d(c,ly)/tx)*tx;
+ Object.assign(L,{O:V3a(V3a(V3k(lx,a),V3k(ly,b)),V3k(lz,d(c,lz)-1500)),lx,ly,lz,hs,zr:3000});return L}
+function drawScene(dynB,canB){const{gl}=GL,{main,shp}=SCN,w=WX;
+ const bind=m=>{gl.bindBuffer(gl.ARRAY_BUFFER,m.vb);gl.vertexAttribPointer(0,3,gl.FLOAT,false,VS*4,0);gl.vertexAttribPointer(1,3,gl.FLOAT,false,VS*4,12);gl.vertexAttribPointer(2,3,gl.FLOAT,false,VS*4,24);gl.vertexAttribPointer(3,1,gl.FLOAT,false,VS*4,36)};
+ const fx=cm.f[0],fy=cm.f[1],fl=hypot(fx,fy)||1;
+ const trees=(f)=>{for(const t of SCN.trees){if(!f(t))continue;bind(t);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,t.ib);gl.drawElements(gl.TRIANGLES,t.n,gl.UNSIGNED_SHORT,0)}};
+ for(const i of[0,1,2,3])gl.enableVertexAttribArray(i);
+ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
+ gl.useProgram(main.pr);const u=main.u,L=SCN.L;
+ gl.uniform3f(u.C,cm.x,cm.y,cm.z);gl.uniform3fv(u.Rr,cm.r);gl.uniform3fv(u.U,cm.u);gl.uniform3fv(u.F,cm.f);
+ const near=.3,far=9000;gl.uniform4f(u.K,2*cm.F/W,2*cm.cx/W-1,2*cm.F/H,1-2*cm.cy/H);gl.uniform2f(u.NF,(far+near)/(far-near),-2*far*near/(far-near));
+ gl.uniform3fv(u.SD,SUN);gl.uniform3fv(u.HZ,w.hz);gl.uniform3fv(u.SC,w.sc);gl.uniform3fv(u.LC,w.lc);gl.uniform3fv(u.ZC,w.zc);gl.uniform1f(u.SK,w.sk);gl.uniform2fv(u.FD,w.fd);
+ setShadowU(u);gl.uniform1f(u.TM,performance.now()/1000%1000);gl.uniform1f(u.CV,w.cv);gl.uniform2f(u.DR,CLD[0],CLD[1]);if(GL.sh){gl.uniform4fv(u.SH,GL.sh);gl.uniform3fv(u.SZ,GL.sz)}
+ gl.clear(gl.DEPTH_BUFFER_BIT);
+ bind(SCN.stat);gl.drawArrays(gl.TRIANGLES,0,SCN.stat.n);
+ bind(SCN.dyn);gl.drawArrays(gl.TRIANGLES,0,dynB.v.length/VS);
+ bind(SCN.can);gl.drawArrays(gl.TRIANGLES,0,canB.v.length/VS);
+ trees(t=>{const dx=t.x-cm.x,dy=t.y-cm.y,d=hypot(dx,dy);return d<4200&&!(d>600&&(dx*fx+dy*fy)/fl<-400)});
+ for(const i of[1,2,3])gl.disableVertexAttribArray(i);gl.disable(gl.DEPTH_TEST)}
+function setShadowU(u){const{gl}=GL,L=SCN.L,on=SCN.sm&&L&&WX.sk>.3&&SHADOWS;gl.uniform1f(u.SE,on?1:0);if(!L)return;
+ gl.uniform3fv(u.LO,L.O);gl.uniform3fv(u.LX,L.lx);gl.uniform3fv(u.LY,L.ly);gl.uniform3fv(u.LZ,L.lz);gl.uniform2f(u.LS,L.hs,L.zr);
+ gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,SCN.smt);gl.uniform1i(u.SM,2);gl.activeTexture(gl.TEXTURE0)}
+// проход теней: дома, машины, стрела, колдун, деревья в квадрате теней (купола — нет, у них своя мягкая тень)
+function shadowPass(dynB){const{gl}=GL;if(!(SCN.sm&&WX.sk>.3&&SHADOWS))return;const L=shadowFrame(),{pr,u}=SCN.shp;
+ gl.bindFramebuffer(gl.FRAMEBUFFER,SCN.fbo);gl.viewport(0,0,SMS,SMS);gl.clearColor(1,1,1,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ gl.useProgram(pr);gl.uniform3fv(u.LO,L.O);gl.uniform3fv(u.LX,L.lx);gl.uniform3fv(u.LY,L.ly);gl.uniform3fv(u.LZ,L.lz);gl.uniform2f(u.LS,L.hs,L.zr);
+ gl.enable(gl.DEPTH_TEST);gl.enableVertexAttribArray(0);for(const i of[1,2,3])gl.disableVertexAttribArray(i);
+ const bind=m=>{gl.bindBuffer(gl.ARRAY_BUFFER,m.vb);gl.vertexAttribPointer(0,3,gl.FLOAT,false,VS*4,0)};
+ bind(SCN.stat);gl.drawArrays(gl.TRIANGLES,0,SCN.stat.n);bind(SCN.dyn);gl.drawArrays(gl.TRIANGLES,0,dynB.v.length/VS);
+ const cx=L.O[0],cy=L.O[1];
+ for(const t of SCN.trees){const q=[t.x-L.O[0],t.y-L.O[1],-L.O[2]],a=q[0]*L.lx[0]+q[1]*L.lx[1],b=q[0]*L.ly[0]+q[1]*L.ly[1]+q[2]*L.ly[2];if(abs(a)>L.hs+400||abs(b)>L.hs+400)continue;
+  bind(t);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,t.ib);gl.drawElements(gl.TRIANGLES,t.n,gl.UNSIGNED_SHORT,0)}
+ gl.disable(gl.DEPTH_TEST);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W*D,H*D);gl.clearColor(0,0,0,0)}
+let SHADOWS=true;
+
+
+// Машины на трассе и дороге вдоль аэродрома: едут по OSM-геометрии, правостороннее движение
+function mkPath(pts){const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return{pts,L,T:L[L.length-1]}}
+function onPath(pa,s){s=((s%pa.T)+pa.T)%pa.T;let i=1;while(i<pa.L.length-1&&pa.L[i]<s)i++;const a=pa.pts[i-1],b=pa.pts[i],t=(s-pa.L[i-1])/(pa.L[i]-pa.L[i-1]||1),d=[b[0]-a[0],b[1]-a[1]],l=hypot(...d)||1;return{p:[a[0]+d[0]*t,a[1]+d[1]*t],d:[d[0]/l,d[1]/l]}}
+let PATHS=null,CARS=null;
+function drawTraffic(){
+ if(!PATHS){const u=OSM.filter(o=>o.c==='U').map(o=>mkPath(o.p)).sort((a,b)=>b.T-a.T)[0];PATHS=[mkPath(HWY),u];
+  CARS=[...Array(40)].map((_,i)=>({pa:i<37?0:1,s0:hash(i,77)*30000,v:(i<37?19:9)+hash(77,i)*10,dir:i%2?1:-1,col:['#c8ccd2','#2f3640','#a3262a','#e9e9e4','#3b5b8a','#6b6f45'][i%6],tr:i%5===0}))}
+ const T=performance.now()/1000,list=[];
+ for(const c of CARS){const pa=PATHS[c.pa],o=onPath(pa,c.s0+c.dir*c.v*T),d=[o.d[0]*c.dir,o.d[1]*c.dir],rt=[-d[1],d[0]];
+  const p=[o.p[0]+rt[0]*2.6,o.p[1]+rt[1]*2.6];if(hypot(p[0]-cm.x,p[1]-cm.y)>1400)continue;
+  const L=c.tr?4.6:2.25,Wd=c.tr?1.25:.9,fp=[[L,Wd],[L,-Wd],[-L,-Wd],[-L,Wd]].map(([a,b])=>[p[0]+d[0]*a+rt[0]*b,p[1]+d[1]*a+rt[1]*b]);
+  list.push({p:fp,h:c.tr?3.2:1.45,col:c.col,cx:p[0],cy:p[1]})}
+ list.sort((a,b)=>hypot(b.cx-cm.x,b.cy-cm.y)-hypot(a.cx-cm.x,a.cy-cm.y)).forEach(prism);
+ // надувная стрела у КДП: показывает направление посадки — против ветра у земли
+ const A=[190-TGT[0],420-TGT[1]],dl=[-cos(wa),-sin(wa)],nl=[-dl[1],dl[0]];
+ const arr=[[-9,-1.2],[3,-1.2],[3,-3.2],[9.5,0],[3,3.2],[3,1.2],[-9,1.2]].map(([a,b])=>[A[0]+dl[0]*a+nl[0]*b,A[1]+dl[1]*a+nl[1]*b]);
+ prism({p:arr,h:.9,col:'#f4f4f2'});
+ for(const[x,y,i]of PARKED){const d=[cos(rad(UA+90)),sin(rad(UA+90))],n=[-d[1],d[0]];if(hypot(x-cm.x,y-cm.y)>900)continue;
+  prism({p:[[2.2,.9],[2.2,-.9],[-2.2,-.9],[-2.2,.9]].map(([a,b])=>[x+d[0]*a+n[0]*b,y+d[1]*a+n[1]*b]),h:1.45,col:['#c8ccd2','#2f3640','#a3262a','#e9e9e4','#3b5b8a'][i%5]})}
+}
+// Деревья: вдоль обведённых лесополос, лесополос трассы и дороги у аэродрома. Рисуются только вблизи камеры
+let TREES=null;
+function mkTrees(){TREES=[];const put=(a,b,off,step)=>{const d=[b[0]-a[0],b[1]-a[1]],l=hypot(...d);if(!l)return;const u=[d[0]/l,d[1]/l],n=[-u[1],u[0]];
+  for(let t=0;t<l;t+=step){const px=a[0]+u[0]*t,py=a[1]+u[1]*t;if(abs(px)>2800||abs(py)>2800)continue;const j=hash(TREES.length,3)-.5,k=hash(7,TREES.length);for(const o of off)TREES.push([a[0]+u[0]*t+n[0]*(o+j*2.5),a[1]+u[1]*t+n[1]*(o+j*2.5),9+k*9,2.4+k*1.8,k])}};
+ for(const b of PBELT)for(let i=1;i<b.length;i++)put(b[i-1],b[i],[-3,3],7);
+ for(let i=1;i<HWY.length;i++)put(HWY[i-1],HWY[i],[-17,-13,13,17],9);
+ const u=OSM.filter(o=>o.c==='U').map(o=>mkPath(o.p)).sort((a,b)=>b.T-a.T)[0];for(let i=1;i<u.pts.length;i++)put(u.pts[i-1],u.pts[i],[11],8);}
+// Деревья видны до 1,8 км: дальние — простые кроны и плавно проявляются, ближние — со стволом и подсветкой. Без резкого «подгруза»
+const TREE_FAR=1800;
+function drawTrees(){if(!TREES)mkTrees();const L=[];
+ for(const t of TREES){const dx=t[0]-cm.x,dy=t[1]-cm.y;if(abs(dx)>TREE_FAR||abs(dy)>TREE_FAR)continue;const d=hypot(dx,dy,cm.z-t[2]);if(d>TREE_FAR)continue;
+  const p=tc(t[0],t[1],t[2]);if(p[2]<2)continue;const s=sc(p);if(s[0]<-50||s[0]>W+50||s[1]<-50||s[1]>H+50)continue;L.push([p,t,d,s])}
+ L.sort((a,b)=>b[2]-a[2]);
+ const TC=[rgb('#6f7a3a'),rgb('#4e6234')];
+ for(const[p,t,d,s]of L){const r=t[3]*cm.F/p[2],fade=cl((TREE_FAR-d)/500,0,1);X.globalAlpha=fade;FOG=fogA(d);const tcol=css(TC[t[4]>.55?0:1]);
+  if(r<2.2){X.fillStyle=tcol;X.fillRect(s[0]-r,s[1]-r,2*r+.6,2*r+.6);continue}
+  const b=tc(t[0],t[1],0);if(b[2]>=1){const sb=sc(b);X.strokeStyle='#4a3d2c';X.lineWidth=max(1,.35*cm.F/p[2]);X.beginPath();X.moveTo(sb[0],sb[1]);X.lineTo(s[0],s[1]);X.stroke()}
+  X.fillStyle=tcol;X.beginPath();X.ellipse(s[0],s[1],r,r*1.25,0,0,7);X.fill();
+  X.globalAlpha=fade*(1-FOG);X.fillStyle=t[4]>.55?'rgba(214,176,70,.75)':'rgba(120,150,70,.55)';X.beginPath();X.ellipse(s[0]-r*.25,s[1]-r*.35,r*.6,r*.7,0,0,7);X.fill()}
+ X.globalAlpha=1;FOG=0;
+}
+// Другие парашютисты: прыгают с того же борта, строят правильный заход (зона ожидания → по ветру → база → прямая против ветра),
+// на прямой подтормаживают, чтобы не перелететь, на 2,5 м делают подрыв. Столкновение с ними — провал.
+let BOTS=[];const BCOL=[['#2f6fd6','#f3f1ea'],['#e0c21a','#2a2e38'],['#1f9e6e','#e6e1d3'],['#c2362f','#f3f1ea'],['#7a3fc4','#e9e4d8']];
+function mkBots(){BOTS=[];const alts=[470,560,650,720,520],pi=SV.ci,kinds=[min(3,pi+1),min(3,pi+2),min(3,pi+1),pi,max(0,pi-1)];for(let i=0;i<5;i++){const c=CAN[kinds[i]];
+ const al=alts[i]+R()*40,T=al/c.S,dd=min(.55*w0*T+250,1600),ua=wa+.3+Math.PI,lt=(R()-.5)*300,bt=[c.tg[0]-TGT[0]+(R()-.5)*14,c.tg[1]-TGT[1]+(R()-.5)*14];
+ BOTS.push({x:bt[0]+cos(ua)*dd-sin(ua)*lt,y:bt[1]+sin(ua)*dd+cos(ua)*lt,alt:al,h:R()*6.28,va:c.V,vs:c.S,L:0,R:0,yr:0,st:false,t:0,
+  C:{...c,c:BCOL[i][0],c2:BCOL[i][1],su:['#2a3552','#3b3b3f','#1c4f40','#5a2a2a','#473a66'][i]},side:i%2?1:-1,lp:bt,on:true})}}
+function botStep(b,dt){if(!b.on){b.t+=dt;return}
+ const c=b.C,w=wind(b.alt),g0=wind(0),ws=max(g0.s,.5),wd=[g0.x/ws,g0.y/ws],up=[-wd[0],-wd[1]],sd=[-wd[1]*b.side,wd[0]*b.side];
+ // высоты захода: зона ожидания выше H1, по ветру до 2/3, база до 1/3, дальше прямая; у скоростных куполов всё выше
+ const H1=cl(360+110*(c.wl-1),330,470),H2=H1*.66,H3=H1*.33,Df=max(1,c.V-ws)*H3/c.S,Db=c.V*(H2-H3)/c.S,L=b.lp,Fs=[L[0]+wd[0]*Df,L[1]+wd[1]*Df],Bs=[Fs[0]+sd[0]*Db,Fs[1]+sd[1]*Db];
+ const ho=150+45*ws;let tgt=b.alt>H1?[L[0]+up[0]*ho+sd[0]*Db,L[1]+up[1]*ho+sd[1]*Db]:b.alt>H2?Bs:b.alt>H3?Fs:L,brake=0,dh;
+ // хватит ли высоты долететь до точки напрямую? если впритык — бросаем коробочку и идём на точку
+ {const d=[L[0]-b.x,L[1]-b.y],dl=hypot(...d)||1,along=(w.x*d[0]+w.y*d[1])/dl,reach=max(0,c.V*.9+along)*b.alt/c.S;if(b.alt<H1+20&&reach<dl*1.25)tgt=L}
+ if(b.alt>H1&&hypot(tgt[0]-b.x,tgt[1]-b.y)<90)dh=atan2(up[1],up[0]);
+ else{const d=[tgt[0]-b.x,tgt[1]-b.y],dl=hypot(...d)||1,u=[d[0]/dl,d[1]/dl],cr=w.x*-u[1]+w.y*u[0];dh=atan2(u[1],u[0])+Math.asin(cl(-cr/c.V,-.8,.8))}
+ if(b.alt<H3){const d=hypot(L[0]-b.x,L[1]-b.y),gs=max(.5,b.va-ws),pred=gs*b.alt/max(b.vs,.5);brake=cl((pred-d)/max(pred,1)*2.5,0,.6)}
+ if(b.alt<2.6)brake=1;
+ const e=atan2(sin(dh-b.h),cos(dh-b.h)),turn=cl(e*1.3,-1,1)*(b.alt<12?.25:1);
+ b.yr+=(turn*c.T*.7-b.yr)*min(1,dt/c.tau);b.h+=b.yr*dt;b.L=cl(brake+max(0,-turn)*.5,0,1);b.R=cl(brake+max(0,turn)*.5,0,1);
+ const at=abs(b.yr)/c.T,vt=c.V*(1-.7*brake)+at*c.V*(.15+.2*c.wl);b.va+=(vt-b.va)*min(1,dt/(b.va>vt?.9:1.8));
+ const sT=c.S*(1-.5*brake)+at*c.S*c.D*2.4-max(0,b.va-vt);b.vs+=(max(-1.5,sT)-b.vs)*min(1,dt/.35);
+ b.x+=(cos(b.h)*b.va+w.x)*dt;b.y+=(sin(b.h)*b.va+w.y)*dt;b.alt-=b.vs*dt;if(b.alt<=0){b.alt=0;b.on=false;b.t=0}}
+function drawBots(){const sP=P,sC=C;
+ for(const b of BOTS.slice().sort((a,q)=>hypot(q.x-cm.x,q.y-cm.y,q.alt-cm.z)-hypot(a.x-cm.x,a.y-cm.y,a.alt-cm.z))){
+  if(hypot(b.x-cm.x,b.y-cm.y)>3500)continue;
+  if(b.on){P=b;C=b.C;drawCanopy();P=sP;C=sC;continue}
+  // приземлился: купол лёг по ветру, пилот стоит
+  const g0=wind(0),ws=max(g0.s,.5),wd=[g0.x/ws,g0.y/ws],nd=[-wd[1],wd[0]],A=C.a,sp=Math.sqrt(b.C.a*.0929*2.3)/2,o=[b.x+wd[0]*5,b.y+wd[1]*5];
+  poly([[o[0]+nd[0]*sp,o[1]+nd[1]*sp,.1],[o[0]+nd[0]*sp+wd[0]*3,o[1]+nd[1]*sp+wd[1]*3,.1],[o[0]-nd[0]*sp+wd[0]*3,o[1]-nd[1]*sp+wd[1]*3,.1],[o[0]-nd[0]*sp,o[1]-nd[1]*sp,.1]],b.C.c);
+  seg([b.x,b.y,0],[b.x,b.y,1.4],.4,'#d94f2a');poly(circ(b.x,b.y,.14,8,1.7),'#f5c542')}
+}
+// Постройка: стены + плоская или двускатная крыша (b.ridge — высота конька над карнизом). Грани сортируются по глубине
+// Детали городка по 2ГИС и фото дрона: крыльцо ангара, синие пилястры, ограждение площадки из мешков, скамейки,
+// флажки на поле, сетка корта, беседка, баннер, будка, палатки
+const FIRS=[...Array(10)].map((_,i)=>[-157+(i%2)*1.5,-2-i*5]).concat([[-168,-52],[-172,-58],[-175,-64],[-162,-50]]);
+const TW=(x,y)=>[x-TGT[0],y-TGT[1]],TT=(t,n)=>TW(...TN(t,n));
+const rectTN=(t,n,l,w)=>[[l,w],[-l,w],[-l,-w],[l,-w]].map(([a,b])=>TT(t+a/2,n+b/2));
+function drawTown(){const c0=TT(47,21);if(hypot(c0[0]-cm.x,c0[1]-cm.y)>1300)return;
+ const F=[];
+ for(let i=-4;i<=4;i++)for(const n of[15.9,34.1])F.push({p:rectTN(51+i*6,n,1.4,.5),h:6.1,col:'#1f5fbf'});
+ F.push({p:rectTN(35,56,12,.4),h:3.2,col:'#2f6fb0'});
+ F.push({p:rectTN(-33,55,3,3),h:3,col:'#e6dcc6',roof:'#7a5a3a',ridge:1.2});
+ F.push({p:rectTN(47,56,3.5,3.5),h:2.4,col:'#5a3a2a',roof:'#4a2f22',ridge:1.4});
+ F.push({p:rectTN(60,61,4,3),h:1.8,col:'#4f6b4a',roof:'#3f5a3a',ridge:1});F.push({p:rectTN(66,61,4,3),h:1.8,col:'#9a9a8a',roof:'#e8e2d6',ridge:1});
+ for(let t=20;t<=76;t+=6)if(t<43||t>55)F.push({p:rectTN(t,10,1.6,.5),h:.5,col:'#b8bcc2'});
+ F.sort((a,b)=>hypot(b.p[0][0]-cm.x,b.p[0][1]-cm.y)-hypot(a.p[0][0]-cm.x,a.p[0][1]-cm.y)).forEach(prism);
+ const q=[[45,16],[53,16],[53,10.5],[45,10.5]].map(([t,n])=>{const v=TT(t,n);return[v[0],v[1],n>13?3.6:3.1]});
+ for(const v of q)seg([v[0],v[1],0],v,.12,'#cfd4da');poly(q,css(rgb('#2f7fd0'),.9),'rgba(0,0,0,.3)');
+ if(hypot(c0[0]-cm.x,c0[1]-cm.y)<750)for(let t=0,k=0;t<102;t+=1.7,k++)prism({p:rectTN(t,1,1.6,.7),h:.45,col:k%2?'#f2f2ee':'#e8633a'});
+ for(let i=0;i<=8;i++){const f=TT(-5+i*12,-12),b=[f[0],f[1],0],tp=[f[0],f[1],1.8];seg(b,tp,.04,'#dddddd');poly([tp,[tp[0]+.7,tp[1]+.2,1.6],[tp[0],tp[1],1.4]],i%2?'#f4f4ee':'#f2c83a')}
+ // ели вдоль тропинки к загону (2ГИС, ортофото)
+ for(const[t,n]of FIRS){const b=TT(t,n),p0=tc(b[0],b[1],0),p1=tc(b[0],b[1],9);if(p0[2]<2||p1[2]<2)continue;const s0=sc(p0),s1=sc(p1),r=2.4*cm.F/p0[2];
+  X.fillStyle='#2f4a2c';X.beginPath();X.moveTo(s1[0],s1[1]);X.lineTo(s0[0]-r,s0[1]-r*.3);X.lineTo(s0[0]+r,s0[1]-r*.3);X.fill();X.fillStyle='#3d5c36';X.beginPath();X.moveTo(s1[0],s1[1]);X.lineTo(s0[0]-r*.2,s0[1]-r*.3);X.lineTo(s0[0]+r,s0[1]-r*.3);X.fill()}
+ const C4=COURT;for(let i=0;i<4;i++){const a=C4[i],b=C4[(i+1)%4];seg([a[0],a[1],0],[a[0],a[1],3.5],.05,'#333');seg([a[0],a[1],3.5],[b[0],b[1],3.5],.03,'rgba(40,40,40,.6)')}
+}
+function prism(b){FOG=fogA(hypot((b.cx??b.p[0][0])-cm.x,(b.cy??b.p[0][1])-cm.y,cm.z));const c=rgb(b.col),rc=b.roof?rgb(b.roof):c,n=b.p.length,B=b.p.map(p=>[p[0],p[1],0]),T=b.p.map(p=>[p[0],p[1],b.h]);
+ let A=0;for(let i=0;i<n;i++){const q=B[(i+1)%n];A+=B[i][0]*q[1]-q[0]*B[i][1]}const sg=A>0?1:-1,F=[];
+ const shade=(pts,base,k0)=>{const a=pts[0],e1=pts[1].map((v,i)=>v-a[i]),e2=pts[2].map((v,i)=>v-a[i]);let nn=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+  const l=hypot(...nn)||1;nn=nn.map(v=>v/l);if(nn[2]<0)nn=nn.map(v=>-v);return css(base,k0+(1-k0)*max(0,nn[0]*SUN[0]+nn[1]*SUN[1]+nn[2]*SUN[2]))};
+ const add=(pts,col,st)=>{const m=pts.reduce((s,p)=>s.map((v,i)=>v+p[i]/pts.length),[0,0,0]);F.push({pts,col,st,z:tc(...m)[2]})};
+ for(let i=0;i<n;i++){const a=B[i],q=B[(i+1)%n],nx=(q[1]-a[1])*sg,ny=-(q[0]-a[0])*sg,l=hypot(nx,ny)||1;
+  if((cm.x-a[0])*nx+(cm.y-a[1])*ny<=0)continue;add([a,q,T[(i+1)%n],T[i]],css(c,.62+.38*max(0,(nx*SUN[0]+ny*SUN[1])/l)))}
+ if(b.ridge&&n===4){const m=(u,v,z)=>[(u[0]+v[0])/2,(u[1]+v[1])/2,z],R0=m(T[0],T[3],b.h+b.ridge),R1=m(T[1],T[2],b.h+b.ridge);
+  add([T[0],T[3],R0],css(c,.8));add([T[1],T[2],R1],css(c,.8));
+  const r1=[T[0],T[1],R1,R0],r2=[T[3],T[2],R1,R0];add(r1,shade(r1,rc,.5),'rgba(0,0,0,.25)');add(r2,shade(r2,rc,.5),'rgba(0,0,0,.25)')}
+ else if(cm.z>b.h)add(T,css(rc,.6+.4*SUN[2]),'rgba(0,0,0,.2)');
+ if(b.tower){const [x,y,rr,hh]=b.tower;add(circ(x,y,rr,14,hh),css(rgb('#8a9096'),.9))}
+ F.sort((u,v)=>v.z-u.z).forEach(f=>{X.lineWidth=1;poly(f.pts,f.col,f.st)});FOG=0}
+function box(x,y,w,d,h,c){
+ const P8=[[x,y,0],[x+w,y,0],[x+w,y+d,0],[x,y+d,0]],T=P8.map(p=>[p[0],p[1],h]);
+ const faces=[[P8[0],P8[1],T[1],T[0],[0,-1,0]],[P8[1],P8[2],T[2],T[1],[1,0,0]],[P8[2],P8[3],T[3],T[2],[0,1,0]],[P8[3],P8[0],T[0],T[3],[-1,0,0]],[...T,[0,0,1]]];
+ faces.forEach(f=>{const n=f.pop(),m=f[0];if((cm.x-m[0])*n[0]+(cm.y-m[1])*n[1]+(cm.z-m[2])*n[2]<=0)return;
+  poly(f,css(c,.6+.4*max(0,n[0]*SUN[0]+n[1]*SUN[1]+n[2]*SUN[2])))});
+}
+
+// Купол: дуга из секций над пилотом, крен в повороте, клеванты тянут задний край вниз
+// Купол: 9 секций с профилем (нос, горб, задняя кромка), нижняя оболочка, стабилизаторы, стропы через каскады, слайдер, свободные концы
+function canopyGeo(){
+ const A=C.a*.0929,span=Math.sqrt(A*2.3),ch=A/span*(P.st?.55:1),Ln=span*(P.st?.65:.82),tk=ch*.16;
+ const h=P.h,fw=[cos(h),sin(h),0],rt0=[-sin(h),cos(h),0],ro=(P.yr||0)/C.T*.5*cl(P.va/C.V,.3,1.3)+(P.tr||0),cr=cos(ro),sr=sin(ro);
+ const up=[rt0[0]*sr,rt0[1]*sr,cr],rt=[rt0[0]*cr,rt0[1]*cr,-sr];
+ const cc=P.cc||0,Lf=1-.72*cc,bk=P.la?P.la.bk:[-fw[0],-fw[1]],H0=[P.x+bk[0]*Ln*cc*.8,P.y+bk[1]*Ln*cc*.8,P.alt+1.5-cc*1.3],n=9,ribs=[],V3=(o,f,u)=>[0,1,2].map(i=>o[i]+fw[i]*f+up[i]*u),br=(P.L+P.R)/2,tt=time+(P===BOTS[0]?1.3:P===BOTS[1]?2.9:P===BOTS[2]?4.1:0);
+ for(let k=0;k<=n;k++){const u=-1+2*k/n,a=u*.62,wob=P.st?sin(tt*20+k*2)*.4:0;
+  const c=[0,1,2].map(i=>H0[i]+up[i]*(Ln*Lf*cos(a)+wob)+rt[i]*Ln*(1-.3*cc)*sin(a));
+  // задняя кромка: клеванта тянет вниз, ткань слегка треплет (сильнее при торможении и в срыве)
+  const df=(u<0?P.L:P.R)*ch*.5*(.25+.75*abs(u))+sin(tt*11+k*1.9)*.035*(1+3*br)*(P.st?4:1);
+  ribs.push({le:V3(c,ch*.47,-tk*.25),f1:V3(c,ch*.33,tk*.32),md:V3(c,ch*.1,tk*.45),te:V3(c,-ch*.53,-df),bl:V3(c,ch*.42,-tk*.75),bm:V3(c,ch*.05,-tk*.55),
+   ln:[.36,.12,-.12,-.36].map(f=>V3(c,ch*f,f>=.05?-tk*(.75-.2*(.42-f)/.37):-tk*.55+(-df+tk*.55)*(.05-f)/.58))});}
+ return{ribs,H0,fw,rt,up,ch,tk,Ln}
+}
+// линия курса по земле (пунктир): куда несёт купол
+function drawTrack(){if(P.gx!=null&&mode==='fly'){X.setLineDash([5,7]);seg([P.x,P.y,.05],[P.x+P.gx*6,P.y+P.gy*6,.05],.12,'rgba(155,227,107,.8)');X.setLineDash([])}}
+function drawCanopy(){
+ const g=canopyGeo(),{ribs,H0,fw,rt,up,ch,tk,Ln}=g,z=P.alt,n=ribs.length-1,tt=time+(P===BOTS[0]?1.3:P===BOTS[1]?2.9:P===BOTS[2]?4.1:0);
+ const dc=hypot(P.x-cm.x,P.y-cm.y,z+Ln-cm.z),near=dc<260;FOG=fogA(dc);
+ if(!GL){const sh=p=>[p[0]-SUN[0]/SUN[2]*p[2],p[1]-SUN[1]/SUN[2]*p[2],0];
+  poly([...ribs.map(r=>sh(r.le)),...ribs.slice().reverse().map(r=>sh(r.te))],'rgba(15,25,8,.3)');poly(circ(...sh([P.x,P.y,z+1]).slice(0,2),.5,10),'rgba(15,25,8,.35)')}
+ drawTrack();
+ const c1=rgb(C.c),c2=rgb(C.c2),suit=rgb(C.su||'#d94f2a'),S=(c,k)=>css(c,k*(.72+.28*WX.sk)+.0);
+ // пилот: ранец, шлем, ноги вместе; при подрыве ноги уходят вперёд («сидя»), у земли — готовность к касанию
+ const at=(b,f,r,u)=>[0,1,2].map(i=>b[i]+fw[i]*f+rt[i]*r+[0,0,1][i]*u);
+ const base=[P.x,P.y,z],prep=cl(1-z/8,0,1),fl=cl((P.L+P.R)/2*1.3-.3,0,1)*cl(1-z/6,0,1),sh1=at(base,0,.22,1.45),sh2=at(base,0,-.22,1.45),hip=at(base,.08,0,.9);
+ const kn=at(base,.25+.1*prep+.25*fl,0,.45+.3*fl),ftL=at(base,.15+.35*prep+.5*fl,-.14+.06*prep,.1*fl),ftR=at(base,.15+.35*prep+.5*fl,.14-.06*prep,.1*fl);
+ const knL=at(kn,0,-.1,0),knR=at(kn,0,.1,0);
+ seg(at(base,-.19,0,1.38),at(base,-.21,0,.84),.52,S(rgb('#23262d'),1));seg(at(base,-.12,0,1.36),at(base,-.13,0,.86),.4,S(rgb('#3a3f4a'),1)); // ранец
+ seg(hip,knL,.2,S(suit,.8));seg(hip,knR,.2,S(suit,.8));seg(knL,ftL,.15,S(suit,.75));seg(knR,ftR,.15,S(suit,.75));
+ seg(ftL,at(ftL,.14,0,-.02),.12,'#16171a');seg(ftR,at(ftR,.14,0,-.02),.12,'#16171a');
+ seg(at(base,0,0,1.47),hip,.44,S(suit,1));seg(at(base,.03,-.13,1.3),at(base,.05,-.12,.95),.05,'#1c1c1c');seg(at(base,.03,.13,1.3),at(base,.05,.12,.95),.05,'#1c1c1c'); // лямки
+ const hl=at(base,-.05,-.32,2.15-P.L*1.15),hr=at(base,-.05,.32,2.15-P.R*1.15),elL=at(base,.05,-.36,1.7-P.L*.5),elR=at(base,.05,.36,1.7-P.R*.5);
+ seg(sh2,elL,.12,S(suit,.9));seg(elL,hl,.1,S(suit,.9));seg(sh1,elR,.12,S(suit,.9));seg(elR,hr,.1,S(suit,.9));
+ for(const hnd of[hl,hr]){const p=tc(...hnd);if(p[2]>NR){const s=sc(p);X.fillStyle='#1a1a1a';X.beginPath();X.arc(s[0],s[1],max(1,.07*cm.F/p[2]),0,7);X.fill()}}
+ {const hc=at(base,.02,0,1.74),p=tc(...hc);if(p[2]>NR){const s=sc(p),r=max(1.5,.15*cm.F/p[2]),gr=X.createRadialGradient(s[0]-r*.35,s[1]-r*.45,r*.1,s[0],s[1],r);
+  gr.addColorStop(0,S(rgb('#fff3b8'),1));gr.addColorStop(.5,S(rgb('#f5c542'),1));gr.addColorStop(1,S(rgb('#a8791c'),1));X.fillStyle=gr;X.beginPath();X.arc(s[0],s[1],r,0,7);X.fill()}}
+ // свободные концы: передние (ряды A, B) и задние (C, D); слайдер над ними
+ const R4=[[sh2,-1,.07],[sh2,-1,-.07],[sh1,1,.07],[sh1,1,-.07]].map(([s0,sd,f])=>[0,1,2].map(i=>s0[i]+up[i]*.6+rt[i]*.08*sd+fw[i]*f));
+ for(let i=0;i<4;i++)seg(i<2?sh2:sh1,R4[i],.04,'#30343a');
+ const mid=(a,b,t=.5)=>a.map((v,i)=>v+(b[i]-v)*t),sl=[0,1,2].map(i=>(R4[0][i]+R4[3][i])/2+up[i]*.55);
+ const slq=[[-.42,-.36],[.42,-.36],[.42,.36],[-.42,.36]].map(([a,b])=>[0,1,2].map(i=>sl[i]+rt[i]*a+fw[i]*b));
+ // стропы: 4 ряда → каскады → свободные концы; клевантные — к рукам
+ if(near){X.globalAlpha=.35;
+  for(let k=0;k<=n;k++){const L2=k<=n/2;for(let j=0;j<4;j+=(dc<90?1:2)){const R2=R4[(L2?0:2)+(j<2?0:1)],t=ribs[k].ln[j],cz=mid(R2,t,.45);seg(t,cz,.011,'#1e1e1e');if(k%2===0)seg(cz,R2,.013,'#1e1e1e')}}
+  X.globalAlpha=.8;
+  for(let k=0;k<3;k++){const cL=mid(hl,ribs[k].te,.6),cR=mid(hr,ribs[n-k].te,.6);seg(cL,ribs[k].te,.011,'#ff7a1a');seg(cR,ribs[n-k].te,.011,'#ff7a1a');if(!k){seg(hl,cL,.013,'#ff7a1a');seg(hr,cR,.013,'#ff7a1a')}}
+  X.globalAlpha=1;poly(slq,S(c2,.85),'rgba(0,0,0,.4)');
+  for(const q of slq){const p=tc(...q);if(p[2]>NR){const s=sc(p);X.fillStyle='#bfc4c8';X.beginPath();X.arc(s[0],s[1],max(.8,.05*cm.F/p[2]),0,7);X.fill()}}}
+ // оболочка: у каждой секции надутая середина (видны нервюры), три панели по хорде, воздухозаборники, низ светится на просвет
+ const F=[];
+ const shade=(pts,base,k0=.5)=>{const a=pts[0],e1=pts[1].map((v,i)=>v-a[i]),e2=pts[pts.length-1].map((v,i)=>v-a[i]);
+  let nn=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];const l=hypot(...nn)||1;nn=nn.map(v=>v/l);if(nn[2]<0)nn=nn.map(v=>-v);
+  return S(base,k0+(1-k0)*max(0,nn[0]*SUN[0]+nn[1]*SUN[1]+nn[2]*SUN[2]))};
+ const add=(pts,col,st)=>{const m=pts.reduce((s,p)=>s.map((v,i)=>v+p[i]/pts.length),[0,0,0]);F.push({pts,col,st,z:tc(...m)[2]})};
+ const bulge=(a,b,key,k)=>{const m=mid(a[key],b[key]);return[0,1,2].map(i=>m[i]+up[i]*tk*k+fw[i]*(key==='le'?ch*.03:0))},seam=near?'rgba(0,0,0,.22)':null;
+ for(let k=0;k<n;k++){const a=ribs[k],b=ribs[k+1],cen=k===(n>>1),edge=k===0||k===n-1,top=cen||edge?c2:c1,nose=cen?c1:c2;
+  add([a.bm,b.bm,b.te,a.te],S(top,.5));add([a.bl,b.bl,b.bm,a.bm],S(top,.48)); // низ: на просвет ярче
+  if(near){const m={le:bulge(a,b,'le',.2),f1:bulge(a,b,'f1',.38),md:bulge(a,b,'md',.35),te:bulge(a,b,'te',.08),bl:bulge(a,b,'bl',-.12)};
+   for(const[L,Rr]of[[a,m],[m,b]]){
+    add([L.le,Rr.le,Rr.f1,L.f1],shade([L.le,Rr.le,Rr.f1,L.f1],nose,.5),seam);
+    add([L.f1,Rr.f1,Rr.md,L.md],shade([L.f1,Rr.f1,Rr.md,L.md],top,.55),seam);
+    add([L.md,Rr.md,Rr.te,L.te],shade([L.md,Rr.md,Rr.te,L.te],top,.5),seam);
+    add([L.le,Rr.le,Rr.bl,L.bl],css(top,.14),'rgba(0,0,0,.5)')}}
+  else{add([a.le,b.le,b.md,a.md],shade([a.le,b.le,b.md,a.md],nose,.55));add([a.md,b.md,b.te,a.te],shade([a.md,b.md,b.te,a.te],top,.5));add([a.le,b.le,b.bl,a.bl],'#151515')}}
+ for(const k of[0,n]){const r=ribs[k],tip=[0,1,2].map(i=>r.bm[i]-up[i]*ch*.4);add([r.bl,tip,r.te],S(c2,.55),'rgba(0,0,0,.3)')}
+ F.sort((a,b)=>b.z-a.z).forEach(f=>{X.lineWidth=1;poly(f.pts,f.col,f.st)});
+ // вытяжной купол на стропе-соединителе: сложен и треплется за куполом
+ if(near){const r4=ribs[n>>1],r5=ribs[(n>>1)+1],top=[0,1,2].map(i=>(r4.md[i]+r5.md[i])/2+up[i]*tk*.4),sw=sin(tt*3.1)*.25,
+   b1=[0,1,2].map(i=>top[i]-fw[i]*1.6+up[i]*.25+rt[i]*sw*.4),pc=[0,1,2].map(i=>top[i]-fw[i]*3.1+up[i]*.15+rt[i]*sw);
+  seg(top,b1,.02,'#e8e8e8');seg(b1,pc,.02,'#e8e8e8');seg(pc,[0,1,2].map(i=>pc[i]-fw[i]*.55+rt[i]*sin(tt*9)*.08),.3,S(c2,.8))}
+ FOG=0;
+}
+function drawMarkers(){
+ const d=hypot(P.x-TG[0],P.y-TG[1]),p=tc(TG[0],TG[1],0),m=34,top=150,bot=H-165;
+ if(p[2]>NR){const s=sc(p);if(s[0]>m&&s[0]<W-m&&s[1]>top&&s[1]<bot){
+  if(d>35){X.fillStyle='#ff7a1a';X.beginPath();X.moveTo(s[0],s[1]-8);X.lineTo(s[0]-8,s[1]-22);X.lineTo(s[0]+8,s[1]-22);X.fill();
+   X.font='600 12px "Chakra Petch",monospace';X.textAlign='center';X.fillStyle='#fff';X.fillText(Math.round(d)+' м',s[0],s[1]-27)}return}}
+ let vx,vy;if(p[2]>NR){const s=sc(p);vx=s[0]-W/2;vy=s[1]-H/2}else{vx=p[0];vy=max(abs(p[0]),40)}
+ const a=atan2(vy,vx),ca=cos(a),sa=sin(a),cx=W/2,cy=(top+bot)/2;
+ const r=min(ca?((ca>0?W-m:m)-cx)/ca:1e9,sa?((sa>0?bot:top)-cy)/sa:1e9);
+ X.save();X.translate(cx+ca*r,cy+sa*r);X.rotate(a);X.fillStyle='#ff7a1a';X.beginPath();X.moveTo(14,0);X.lineTo(-8,-10);X.lineTo(-8,10);X.fill();X.restore();
+}
+// Высотомер: циферблат 0–1000 м, зоны захода (300–100 — коробочка, 100–15 — прямая, ниже 15 — подрыв) и цифры
+function drawAlti(){const T0=$('hudtop').getBoundingClientRect().top,R0=62,cx=16+R0,cy=T0+12+R0,a=v=>-Math.PI/2+v/1000*Math.PI*2;
+ X.save();X.beginPath();X.arc(cx,cy,R0,0,7);X.fillStyle='rgba(12,16,14,.82)';X.fill();X.lineWidth=2;X.strokeStyle='rgba(243,239,226,.35)';X.stroke();
+ const band=(v0,v1,c)=>{X.beginPath();X.arc(cx,cy,R0-6,a(v0),a(v1));X.lineWidth=7;X.strokeStyle=c;X.stroke()};
+ band(100,300,'rgba(245,200,66,.85)');band(15,100,'rgba(255,122,26,.9)');band(0,15,'rgba(255,90,78,.95)');
+ X.fillStyle='#f3efe2';X.textAlign='center';X.textBaseline='middle';X.font='700 12px "Chakra Petch",monospace';
+ for(let v=0;v<1000;v+=50){const an=a(v),big=v%100===0;X.strokeStyle='rgba(243,239,226,.8)';X.lineWidth=big?2:1;X.beginPath();
+  X.moveTo(cx+cos(an)*(R0-2),cy+sin(an)*(R0-2));X.lineTo(cx+cos(an)*(R0-(big?12:8)),cy+sin(an)*(R0-(big?12:8)));X.stroke();
+  if(big)X.fillText(v/100,cx+cos(an)*(R0-21),cy+sin(an)*(R0-21))}
+ const an=a(P.alt%1000);X.strokeStyle=P.alt<15?'#ff5a4e':'#fff';X.lineWidth=3;X.lineCap='round';X.beginPath();X.moveTo(cx-cos(an)*8,cy-sin(an)*8);X.lineTo(cx+cos(an)*(R0-10),cy+sin(an)*(R0-10));X.stroke();
+ X.beginPath();X.arc(cx,cy,4,0,7);X.fillStyle='#fff';X.fill();
+ X.font='700 20px "Chakra Petch",monospace';X.fillStyle=P.alt<15?'#ff5a4e':'#fff';X.fillText(P.alt<20?P.alt.toFixed(1):Math.round(P.alt),cx,cy+27);
+ X.font='500 10px "Chakra Petch",monospace';X.fillStyle='rgba(243,239,226,.7)';X.fillText('×100 м',cx,cy-24);X.restore()}
+// Ветер: крупная стрелка относительно направления полёта (вверх — вперёд), сила цветом, словами — встречный/попутный/боковой
+function drawWind(){const T0=$('hudtop').getBoundingClientRect().top,cx=W/2,cy=T0+50,R0=36,w=wind(P.alt),rel=Math.atan2(w.y,w.x)-P.h;
+ const col=w.s<3?'#9be36b':w.s<6?'#f5c842':'#ff5a4e',an=rel-Math.PI/2;
+ X.save();X.beginPath();X.arc(cx,cy,R0,0,7);X.fillStyle='rgba(12,16,14,.82)';X.fill();X.strokeStyle='rgba(243,239,226,.35)';X.lineWidth=2;X.stroke();
+ X.fillStyle='rgba(243,239,226,.55)';X.beginPath();X.moveTo(cx,cy-R0+3);X.lineTo(cx-5,cy-R0+11);X.lineTo(cx+5,cy-R0+11);X.fill();
+ X.translate(cx,cy);X.rotate(an+Math.PI/2);X.fillStyle=col;X.strokeStyle='rgba(0,0,0,.4)';X.lineWidth=1.5;X.beginPath();
+ X.moveTo(0,-26);X.lineTo(13,-4);X.lineTo(5,-4);X.lineTo(5,24);X.lineTo(-5,24);X.lineTo(-5,-4);X.lineTo(-13,-4);X.closePath();X.fill();X.stroke();X.restore();
+ const c=cos(rel),sd=sin(rel),word=w.s<1?'штиль':c<-.7?'встречный':c>.7?'попутный':(sd>0?'боковой слева':'боковой справа');
+ X.save();X.textAlign='center';X.font='700 17px "Chakra Petch",monospace';X.fillStyle=col;X.shadowColor='rgba(0,0,0,.7)';X.shadowBlur=4;
+ X.fillText(w.s.toFixed(1)+' м/с',cx,cy+R0+18);X.font='500 12px "Chakra Petch",monospace';X.fillStyle='#f3efe2';
+ X.fillText(word,cx,cy+R0+33);X.font='500 11px "Chakra Petch",monospace';X.fillStyle='rgba(243,239,226,.75)';X.fillText('у земли '+w0.toFixed(1),cx,cy+R0+47);X.restore()}
+// ---------- Точки коробочки (тренировка): 300 м — начало участка по ветру, 200 м — разворот на базу, 100 м — выход на прямую ----------
+// Места считаются под твой купол и ветер у земли; сторона захода — со стороны поля. Когда проходишь высоту точки, меряем, насколько далеко от неё: ближе 40 м — засчитана
+const HOOP_R=18;
+function mkGates(){const ws=w0,wd=[cos(wa),sin(wa)],L=TG,Df=max(1,C.V-ws*1.1)*100/C.S,Db=C.V*100/C.S,Dd=(C.V+ws*1.3)*100/C.S,Fs=[L[0]+wd[0]*Df,L[1]+wd[1]*Df];
+ const nOf=p=>(p[0]+TGT[0]-TA[0])*TN_[0]+(p[1]+TGT[1]-TA[1])*TN_[1];let sd=[-wd[1],wd[0]];if(nOf([Fs[0]+sd[0]*Db,Fs[1]+sd[1]*Db])>nOf([Fs[0]-sd[0]*Db,Fs[1]-sd[1]*Db]))sd=[-sd[0],-sd[1]];
+ const Bs=[Fs[0]+sd[0]*Db,Fs[1]+sd[1]*Db],Ds=[Bs[0]-wd[0]*Dd,Bs[1]-wd[1]*Dd];
+ return[{h:300,p:Ds,d:wd,st:0},{h:200,p:Bs,d:[-sd[0],-sd[1]],st:0},{h:100,p:Fs,d:[-wd[0],-wd[1]],st:0}]}
+function gateStep(){const G=P.gates;if(!G)return;const g=G.find(g=>!g.st);if(!g||P.alt>g.h)return;const d=hypot(P.x-g.p[0],P.y-g.p[1]);g.off=d;g.st=d<=40?1:-1;
+ P.toast=[`Точка ${g.h} м — ${Math.round(d)} м от точки`,g.st>0?1:0];P.toastT=2.5;if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred(g.st>0?'light':'rigid')}
+// точка в небе: яркий шар и тонкая линия до земли, чтобы понимать, где она над полем
+function gatesM(B){const G=P.gates;if(!G||mode==='brief')return;const nx=G.findIndex(g=>!g.st),T=performance.now()/1000;
+ G.forEach((g,i)=>{const col=g.st>0?[.35,.9,.4]:g.st<0?[.9,.35,.3]:i===nx?[1,.62+.25*sin(T*5),.1]:[.95,.9,.75],k=MAT;MAT=2;sphereM(B,[g.p[0],g.p[1],g.h],i===nx?3:2.2,col);lineM(B,[g.p[0],g.p[1],g.h-3],[g.p[0],g.p[1],0],.15,sh3(col,.8));MAT=k})}
+function drawToast(){if(!(P.toastT>0)||!P.toast||mode!=='fly')return;const b=$('tl').getBoundingClientRect().bottom+(P.warnT>0?64:10),tw=min(W-32,300),x=(W-tw)/2,al=min(1,P.toastT/.5),ok=P.toast[1];
+ X.save();X.globalAlpha=al;X.fillStyle=ok?'rgba(14,40,18,.9)':'rgba(46,16,14,.9)';X.strokeStyle=ok?'#9be36b':'#ff5a4e';X.lineWidth=2;X.beginPath();X.roundRect?X.roundRect(x,b,tw,32,8):X.rect(x,b,tw,32);X.fill();X.stroke();
+ X.fillStyle=ok?'#9be36b':'#ff5a4e';X.font='700 13px "Chakra Petch",monospace';X.textAlign='center';X.fillText((ok?'◯ ':'✕ ')+P.toast[0],W/2,b+21);X.restore()}
+function drawGateMark(){const G=P.gates;if(!G||mode!=='fly')return;const g=G.find(g=>!g.st);if(!g)return;const p=tc(g.p[0],g.p[1],g.h+6);if(p[2]<NR)return;const s=sc(p);
+ if(s[0]<20||s[0]>W-20||s[1]<140||s[1]>H-160)return;X.save();X.font='700 12px "Chakra Petch",monospace';X.textAlign='center';X.fillStyle='#ffb020';X.strokeStyle='rgba(0,0,0,.6)';X.lineWidth=3;
+ const t=`точка ${g.h} м · ${Math.round(hypot(g.p[0]-P.x,g.p[1]-P.y))} м`;X.strokeText(t,s[0],s[1]);X.fillText(t,s[0],s[1]);X.restore()}
+function drawWarn(){if(!(P.warnT>0)||mode!=='fly')return;const y=$('tl').getBoundingClientRect().bottom+10,al=min(1,P.warnT/.5),tw=min(W-32,380),x=(W-tw)/2;
+ X.save();X.globalAlpha=al;X.font='600 13px "Chakra Petch",monospace';
+ const words=P.warn.split(' '),lines=[''];for(const w of words){const t=(lines[lines.length-1]+' '+w).trim();if(X.measureText(t).width>tw-60&&lines[lines.length-1])lines.push(w);else lines[lines.length-1]=t}
+ const h=16+lines.length*17;X.fillStyle='rgba(40,32,6,.92)';X.strokeStyle='#f5c842';X.lineWidth=2;X.beginPath();X.roundRect?X.roundRect(x,y,tw,h,8):X.rect(x,y,tw,h);X.fill();X.stroke();
+ const cy=y+h/2;X.fillStyle='#f5c842';X.beginPath();X.moveTo(x+24,cy-12);X.lineTo(x+38,cy+11);X.lineTo(x+10,cy+11);X.closePath();X.fill();
+ X.fillStyle='#28200a';X.font='800 15px "Chakra Petch",monospace';X.textAlign='center';X.fillText('!',x+24,cy+9);
+ X.fillStyle='#f5c842';X.font='600 13px "Chakra Petch",monospace';X.textAlign='left';lines.forEach((l,i)=>X.fillText(l,x+48,y+20+i*17));X.restore()}
+function drawRadar(){
+ const cx=RB.left+60,cy=RB.top+60,rr=58,d=hypot(P.x-TG[0],P.y-TG[1]),range=cl(d*1.3,60,900),k=rr/range,cy_=cos(cm.yaw),sy=sin(cm.yaw);
+ const rp=(dx,dy)=>[dx*-sy+dy*cy_,-(dx*cy_+dy*sy)];
+ X.save();X.beginPath();X.arc(cx,cy,rr,0,7);X.fillStyle='rgba(14,20,16,.72)';X.fill();X.strokeStyle='rgba(243,239,226,.25)';X.lineWidth=1;X.stroke();X.clip();
+ X.beginPath();X.arc(cx,cy,rr/2,0,7);X.stroke();
+ const w=wind(P.alt),wv=rp(w.x/(w.s||1),w.y/(w.s||1));
+ X.strokeStyle='rgba(255,122,26,.55)';X.lineWidth=3;X.beginPath();X.moveTo(cx-wv[0]*rr*.8,cy-wv[1]*rr*.8);X.lineTo(cx+wv[0]*rr*.8,cy+wv[1]*rr*.8);X.stroke();
+ const ax=cx+wv[0]*rr*.8,ay=cy+wv[1]*rr*.8,aa=atan2(wv[1],wv[0]);X.fillStyle='rgba(255,122,26,.8)';X.beginPath();X.moveTo(ax+cos(aa)*6,ay+sin(aa)*6);X.lineTo(ax+cos(aa+2.4)*9,ay+sin(aa+2.4)*9);X.lineTo(ax+cos(aa-2.4)*9,ay+sin(aa-2.4)*9);X.fill();
+ let t=rp(TG[0]-P.x,TG[1]-P.y);const tl=hypot(...t)*k;if(tl>rr-6)t=t.map(v=>v/hypot(...t)*(rr-6)/k);
+ X.fillStyle='#d8c49a';X.beginPath();X.arc(cx+t[0]*k,cy+t[1]*k,max(3,C.R*k),0,7);X.fill();X.fillStyle='#ff7a1a';X.beginPath();X.arc(cx+t[0]*k,cy+t[1]*k,2.5,0,7);X.fill();
+ if(P.gx!=null&&P.gs>.1){const v=rp(P.gx/P.gs,P.gy/P.gs);X.strokeStyle='#9be36b';X.lineWidth=2;X.beginPath();X.moveTo(cx,cy);X.lineTo(cx+v[0]*rr*.6,cy+v[1]*rr*.6);X.stroke()}
+ if(P.gates){const nx=P.gates.findIndex(g=>!g.st);P.gates.forEach((g,i)=>{let v=rp(g.p[0]-P.x,g.p[1]-P.y);const l=hypot(...v)*k;if(l>rr-4)v=v.map(q=>q/hypot(...v)*(rr-4)/k);
+  X.strokeStyle=g.st>0?'#9be36b':g.st<0?'#ff5a4e':i===nx?'#ffb020':'rgba(243,239,226,.6)';X.lineWidth=2;X.beginPath();X.arc(cx+v[0]*k,cy+v[1]*k,4,0,7);X.stroke()})}
+ for(const b of BOTS){let v=rp(b.x-P.x,b.y-P.y);const l=hypot(...v)*k;if(l>rr-4)v=v.map(q=>q/hypot(...v)*(rr-4)/k);X.fillStyle=b.C.c;X.beginPath();X.arc(cx+v[0]*k,cy+v[1]*k,b.on?3.5:2,0,7);X.fill()}
+ X.translate(cx,cy);X.rotate(P.h-cm.yaw);X.fillStyle='#fff';X.beginPath();X.moveTo(0,-8);X.lineTo(6,6);X.lineTo(0,3);X.lineTo(-6,6);X.fill();X.restore();
+ X.font='500 10px "Chakra Petch",monospace';X.textAlign='center';X.fillStyle='rgba(243,239,226,.7)';X.fillText(Math.round(range)+' м',cx,cy+rr-5);
+}
+
+const PH=[[300,'Зона ожидания: держись с наветренной стороны, смотри ветер и ориентиры.'],[200,'Коробочка: участок по ветру вдоль площадки, сбоку от цели.'],[100,'База: поперёк ветра. Оцени, дотягиваешь ли до цели.'],[15,'Прямая: против ветра, без резких поворотов.'],[0,'На 2–3 м тяни обе клеванты до конца.']];
+function hud(){
+ const w=wind(P.alt),d=hypot(P.x-TG[0],P.y-TG[1]);
+ $('alt').firstChild.nodeValue=P.alt<20?P.alt.toFixed(1):Math.round(P.alt);
+ $('spd').textContent=`↓ ${P.vs.toFixed(1)} м/с   → ${P.gs.toFixed(1)} м/с`;
+ $('dist').textContent=`до центра ${Math.round(d)} м   снос ${(P.lat||0)>0?'→':'←'} ${abs(P.lat||0).toFixed(1)}`+(P.st?'   СРЫВ! Отпусти клеванты':'')+(P.nb<60?`   ⚠ купол рядом ${Math.round(P.nb)} м`:'')+((P.tu||0)>.18&&P.alt<120?'   ≋ болтанка':'');P.nb=1e9;
+ $('dist').style.color=P.st?'var(--bad)':'';
+ $('phase').textContent=(PH.find(p=>P.alt>p[0])||PH[4])[1];
+ $('wtx').textContent=`ветер ${w.s.toFixed(1)} м/с · у земли ${w0.toFixed(1)}`;
+ $('tgL').lastChild.style.height=P.L*100+'%';$('tgR').lastChild.style.height=P.R*100+'%';
+ const tp=$('tape');tp.hidden=!(P.alt<15&&mode==='fly');if(!tp.hidden)tp.lastChild.style.bottom=P.alt/15*100+'%';
+}
+
+// Ниже 200 м — позёмка над травой: она движется с ветром относительно земли, по ней видно, куда и как сильно сносит
+let AIRP=null,GNDP=null,SPL=null;
+function drawAir(dt){if(mode==='brief')return;const S=40,G=360;
+ if(!AIRP){AIRP=[...Array(110)].map(()=>[cm.x+(R()-.5)*S,cm.y+(R()-.5)*S,cm.z+(R()-.5)*S]);GNDP=[...Array(90)].map(()=>[P.x+(R()-.5)*G,P.y+(R()-.5)*G,.4+R()*2.5,R()])}
+ const vx=P.gx||0,vy=P.gy||0,vz=-(P.vs||0),dk=WX.sk>.5?'255,255,250':'235,238,242';
+ X.lineCap='round';
+ const ga=cl(1-P.alt/200,0,1);if(ga<=0)return;const w=wind(1);
+ for(const p of GNDP){p[0]+=w.x*1.15*dt;p[1]+=w.y*1.15*dt;
+  for(const[i,c]of[[0,P.x],[1,P.y]]){const d=p[i]-c;if(d>G/2)p[i]-=G;else if(d<-G/2)p[i]+=G}
+  const L=.5+w.s*.45,a=tc(...p),q=tc(p[0]-w.x/w.s*L,p[1]-w.y/w.s*L,p[2]);if(a[2]<1||q[2]<1)continue;
+  const s0=sc(a),s1=sc(q),al=ga*.5*cl(1-a[2]/260,0,1)*(.5+.5*sin(time*2+p[3]*20));if(al<.03)continue;
+  X.strokeStyle=`rgba(245,240,220,${al})`;X.lineWidth=max(1,.12*cm.F/a[2]);X.beginPath();X.moveTo(s0[0],s0[1]);X.lineTo(s1[0],s1[1]);X.stroke()}
+ X.lineCap='butt'}
+// Линии скорости по бокам от купола: появляются, когда купол разогнался выше крейсерской (после клевант, в спирали)
+let SPK=0;
+function speedLines(dt){const tgt=mode==='fly'?cl((P.va/C.V-1.04)/.2,0,1):0;SPK+=(tgt-SPK)*min(1,dt*3);if(SPK<.02)return;
+ if(!SPL)SPL=[...Array(22)].map((_,i)=>({s:i%2?1:-1,y:R(),ph:R(),v:.8+R()*.8,l:.5+R()*.7}));
+ const vx=W/2,vy=cm.cy-H*.08;X.lineCap='round';
+ for(const L of SPL){L.ph+=dt*L.v*1.6;if(L.ph>1){L.ph-=1;L.y=R();L.l=.5+R()*.7}
+  const x0=vx+L.s*(W*.2+L.ph*W*.3),y0=H*.1+L.y*H*.5,dx=x0-vx,dy=y0-vy,dl=hypot(dx,dy)||1,len=(25+55*L.l)*(.5+SPK*.5);
+  const al=SPK*.55*sin(L.ph*Math.PI);X.strokeStyle=`rgba(255,255,255,${al})`;X.lineWidth=1.2+L.l;
+  X.beginPath();X.moveTo(x0,y0);X.lineTo(x0+dx/dl*len,y0+dy/dl*len);X.stroke()}
+ X.lineCap='butt'}
+// Общий тон сцены под погоду (только объекты на канве, земля и небо тонируются в шейдере) и лёгкая виньетка
+let VG=null;
+function post(){if(WX.tint){X.globalCompositeOperation='source-atop';X.fillStyle=WX.tint;X.fillRect(0,0,W,H);X.globalCompositeOperation='source-over'}
+ if(!VG||VG.w!==W||VG.h!==H){const g=X.createRadialGradient(W/2,H*.45,min(W,H)*.35,W/2,H*.45,hypot(W,H)*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(10,14,20,.32)');VG={g,w:W,h:H}}
+ X.fillStyle=VG.g;X.fillRect(0,0,W,H)}
+let last=performance.now();
+function loop(now){
+ const dt=min((now-last)/1000,.05);last=now;
+ if(mode!=='brief'&&mode!=='pause')for(const b of BOTS)botStep(b,dt);
+ if(mode==='fly')step(dt);else if(mode==='brief'){time+=dt;P.h+=dt*.06}
+ if(mode==='done'&&P.la){const la=P.la;la.t+=dt;la.sp=max(0,la.sp-la.dec*dt);P.x+=la.dir[0]*la.sp*dt;P.y+=la.dir[1]*la.sp*dt;la.ph+=la.sp*3.6*dt;P.cc=min(1,la.t/1.5);P.L=P.R=max(0,1-la.t*.8);if(la.show&&la.t>=la.show){la.show=0;$('res').hidden=false;$('again').focus()}}
+ cm.by=cm.by??cm.yaw;let dy=P.h-cm.by;dy=atan2(sin(dy),cos(dy));cm.by+=dy*min(1,dt*2.2);
+ cm.bp=cm.bp??cm.pit;cm.bp+=(.28+.5*cl(P.alt/450,0,1)-cm.bp)*min(1,dt*1.5);
+ {const ky=(keys.has('KeyE')?1:0)-(keys.has('KeyQ')?1:0),kp=(keys.has('KeyF')?1:0)-(keys.has('KeyR')?1:0);
+  if(ky||kp){LK.yaw+=ky*dt*1.6;LK.pit=cl(LK.pit+kp*dt*1.1,-.75,1.1);LK.idle=0}
+  else if(LK.id===null){LK.idle+=dt;if(LK.idle>1.2){const k=min(1,dt*1.8);LK.yaw=atan2(sin(LK.yaw),cos(LK.yaw))*(1-k);LK.pit*=1-k}}}
+ // Ощущение скорости: угол обзора шире при разгоне (после спирали скорость выше крейсерской) и в крутом повороте
+ {const ex=mode==='fly'?cl(P.va/C.V-1,0,1.2)*.1+cl(abs(P.yr)/C.T,0,1)*.06+cl((P.vs-C.S)/C.S,0,2)*.03:0;cm.fv=(cm.fv||0)+(ex-(cm.fv||0))*min(1,dt*1.2)}
+ cm.yaw=cm.by+LK.yaw;cm.pit=cl(cm.bp+LK.pit,-.45,1.5);
+ setCam();drawWorld();if(!SCN){if(mode!=='brief')drawBots();drawCanopy()}else drawTrack();drawAir(dt);post();speedLines(dt);drawMarkers();drawRadar();drawAlti();drawWind();drawWarn();drawToast();drawGateMark();hud();
+ requestAnimationFrame(loop)}
+
+const MODES={train:'Купол раскрыт на 600 м. Коробочка по точкам 300, 200 и 100 м, подсказки по этапам захода, правила площадки, оценка посадки и разбор ошибок.',
+ free:'Сам выбираешь высоту раскрытия и ветер. Без подсказок и оценки зоны — просто летай и садись. Правила безопасности всё равно действуют.'};
+const ALTS=[600,1000,1500],WINDS={rand:['Случайный',1.5,6],calm:['Слабый',.3,1.5],mid:['Средний',3,5],strong:['Сильный',6,9]};
+function menu(){SV.mode=SV.mode||'train';
+ $('modes').querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.m===SV.mode);b.onclick=()=>{SV.mode=b.dataset.m;save();menu()}});
+ $('modeTxt').textContent=MODES[SV.mode];$('freeOpts').hidden=SV.mode!=='free';
+ $('alts').innerHTML=ALTS.map(a=>`<button type="button" data-a="${a}" aria-pressed="${a===(SV.alt||600)}">${a} м</button>`).join('');
+ $('alts').querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.alt=+b.dataset.a;save();menu()});
+ $('winds').innerHTML=Object.entries(WINDS).map(([k,w])=>`<button type="button" data-k="${k}" aria-pressed="${k===(SV.wind||'rand')}">${w[0]}</button>`).join('');
+ $('winds').querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.wind=b.dataset.k;save();menu()});
+ $('cans').innerHTML=CAN.map((c,i)=>`<button type="button" id="can${i}" aria-pressed="${i===SV.ci}"><b>${c.a} фт²</b><small>${c.n} · WL ${(LB/c.a).toFixed(2)}</small><small>${c.V} м/с · ↓${c.S} · отклик ${c.resp}</small><small>круг ${c.R} м${SV.best[c.a]!=null?' · лучш. '+SV.best[c.a]+' м':''}</small></button>`).join('');
+ CAN.forEach((c,i)=>$('can'+i).onclick=()=>{SV.ci=i;C=CAN[i];save();menu()});
+
+ $('stat').textContent=`Прыжков: ${SV.j}. Загрузка считается для ${KG} кг. Карта: © участники OpenStreetMap; поля и лесополосы — Sentinel-2 cloudless (EOX, CC BY 4.0); городок — по фото с дрона и 2ГИС.`;
+ $('res').hidden=true;$('pause').hidden=true;$('pauseB').hidden=true;$('brief').hidden=false;mode='brief';
+}
+let PM=null;function pause(on){if(on&&mode==='fly'){PM=mode;mode='pause';ptr.clear();keys.clear();$('pInfo').textContent=`${SV.mode==='free'?'Свободный полёт':'Тренировка'} · купол ${C.a} фт² · высота ${Math.round(P.alt)} м · ветер у земли ${w0.toFixed(1)} м/с`;$('pause').hidden=false;$('resB').focus()}
+ else if(!on&&mode==='pause'){mode=PM||'fly';$('pause').hidden=true;last=performance.now()}}
+$('pauseB').onclick=()=>pause(true);$('resB').onclick=()=>pause(false);$('rjB').onclick=()=>{$('pause').hidden=true;jump()};$('mmB').onclick=()=>{$('pause').hidden=true;menu();idle()};
+$('goB').onclick=jump;$('again').onclick=jump;$('menu').onclick=()=>{menu();idle()};
+function idle(){w0=3;wa=.6;P={x:-60,y:40,alt:60,h:-.4,va:C.V,vs:0,L:0,R:0,st:false,gs:0,t:0,yr:0};cm.yaw=cm.by=P.h;cm.pit=cm.bp=.45}
+C=CAN[SV.ci];setWx('clear');setSeason('summer');idle();menu();requestAnimationFrame(loop);
+</script>
+
+</body></html>
